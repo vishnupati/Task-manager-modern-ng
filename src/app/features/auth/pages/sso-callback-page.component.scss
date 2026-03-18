@@ -1,0 +1,27 @@
+:host {
+    display: block;
+}
+
+.callback-shell {
+    min-height: calc(100vh - 190px);
+    display: grid;
+    place-items: center;
+    padding: 1.5rem;
+
+    section {
+        border: 1px solid #d3dced;
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 1rem 1.2rem;
+        text-align: center;
+    }
+
+    h1 {
+        margin: 0;
+    }
+
+    p {
+        margin: 0.4rem 0 0;
+        color: #42526e;
+    }
+}

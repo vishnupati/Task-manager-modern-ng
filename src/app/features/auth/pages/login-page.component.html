@@ -1,0 +1,53 @@
+<main class="auth-shell">
+    <section class="auth-card">
+        <p class="eyebrow">Task Manager</p>
+        <h1>Sign in to your workspace</h1>
+        <p class="lead">Use your email and password, or continue with single sign-on.</p>
+
+        @if (errorMessage()) {
+        <p class="error-banner">{{ errorMessage() }}</p>
+        }
+
+        <form (ngSubmit)="submit()" novalidate>
+            <label>
+                Email
+                <input type="email" [formField]="loginForm.email" autocomplete="email" />
+            </label>
+            @if (loginForm.email().touched() && loginForm.email().invalid()) {
+            <ul class="error-list">
+                @for (error of loginForm.email().errors(); track error) {
+                <li class="hint">{{ error.message }}</li>
+                }
+            </ul>
+            }
+
+            <label>
+                Password
+                <input type="password" [formField]="loginForm.password" autocomplete="current-password" />
+            </label>
+            @if (loginForm.password().touched() && loginForm.password().invalid()) {
+            <ul class="error-list">
+                @for (error of loginForm.password().errors(); track error) {
+                <li class="hint">{{ error.message }}</li>
+                }
+            </ul>
+            }
+
+            <button class="primary" type="submit" [disabled]="isSubmitting() || !isFormValid()">
+                {{ isSubmitting() ? 'Signing in...' : 'Sign in' }}
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>or continue with</span>
+        </div>
+
+        <div class="sso-actions">
+            <button type="button" (click)="loginWithSso('google')">Google</button>
+            <button type="button" (click)="loginWithSso('github')">GitHub</button>
+            <button type="button" (click)="loginWithSso('microsoft')">Microsoft</button>
+        </div>
+
+        <p class="switch">No account yet? <a routerLink="/signup" (click)="isSubmitting.set(false)">Create one</a>.</p>
+    </section>
+</main>

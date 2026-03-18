@@ -1,0 +1,69 @@
+:host {
+    display: block;
+}
+
+.settings-shell {
+    min-height: calc(100vh - 190px);
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.settings-card {
+    width: min(500px, 100%);
+    border: 1px solid #d0d9ea;
+    border-radius: 1rem;
+    padding: 1rem;
+    background: #fff;
+
+    h1 {
+        margin: 0;
+    }
+
+    p {
+        margin: 0.3rem 0 1rem;
+        color: #45546f;
+    }
+}
+
+form {
+    display: grid;
+    gap: 0.6rem;
+}
+
+label {
+    display: grid;
+    gap: 0.35rem;
+    font-weight: 600;
+}
+
+input {
+    border: 1px solid #c8d1e2;
+    border-radius: 0.7rem;
+    padding: 0.7rem 0.8rem;
+    font: inherit;
+}
+
+.error-list {
+    margin: 0.3rem 0 0 0;
+    padding-left: 1.2rem;
+    color: #7b1330;
+    font-size: 0.9rem;
+    list-style: disc;
+}
+
+button {
+    margin-top: 0.5rem;
+    border: none;
+    border-radius: 0.7rem;
+    background: #132138;
+    color: #fff;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-weight: 700;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+}

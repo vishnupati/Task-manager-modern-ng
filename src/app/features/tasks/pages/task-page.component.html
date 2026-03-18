@@ -1,0 +1,83 @@
+<main class="task-shell">
+    <section class="hero">
+        <div>
+            <p class="eyebrow">Task Management</p>
+            <h1>Build momentum, one task at a time.</h1>
+            <p class="subtitle">Modern Angular frontend with signals, resources, and RxJS interop.</p>
+        </div>
+        <button class="cta" type="button" (click)="openCreate()">Add Task</button>
+    </section>
+
+    <section class="kpis">
+        <article>
+            <h3>Total</h3>
+            <strong>{{ stats().total }}</strong>
+        </article>
+        <article>
+            <h3>Pending</h3>
+            <strong>{{ stats().pending }}</strong>
+        </article>
+        <article>
+            <h3>Completed</h3>
+            <strong>{{ stats().completed }}</strong>
+        </article>
+    </section>
+
+    <section class="toolbar">
+        <input type="search" placeholder="Search by title or description"
+            (input)="onSearchChange($any($event.target).value)" />
+    </section>
+
+    @if (errorMessage()) {
+    <p class="error-banner">{{ errorMessage() }}</p>
+    }
+
+    @if (isLoading()) {
+    <p class="state">Loading tasks...</p>
+    } @else if (!filteredTasks().length) {
+    <p class="state">No tasks found. Add your first task to get started.</p>
+    } @else {
+    <section class="task-list">
+        @for (task of paginatedTasks(); track task.id) {
+        <article class="task-card" [class.completed]="task.status === 'completed'">
+            <header>
+                <h2>{{ task.title }}</h2>
+                <small>{{ task.createdAt | date: 'mediumDate' }}</small>
+            </header>
+
+            @if (task.description) {
+            <p>{{ task.description }}</p>
+            }
+
+            <footer>
+                <label class="toggle">
+                    <input type="checkbox" [checked]="task.status === 'completed'"
+                        (change)="toggleStatus(task.id, $any($event.target).checked)" />
+                    <span>{{ task.status === 'completed' ? 'Completed' : 'Pending' }}</span>
+                </label>
+
+                <div class="actions">
+                    <button type="button" (click)="openEdit(task.id)">Edit</button>
+                    <button type="button" class="danger" (click)="removeTask(task.id)">Delete</button>
+                </div>
+            </footer>
+        </article>
+        }
+    </section>
+
+    <section class="pager">
+        <button type="button" (click)="goToPreviousPage()" [disabled]="currentPage() === 1">Previous</button>
+        <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button type="button" (click)="goToNextPage()" [disabled]="currentPage() === totalPages()">Next</button>
+    </section>
+    }
+
+    @if (isPanelOpen()) {
+    <section class="panel-overlay" (click)="closePanel()">
+        <div class="panel" (click)="$event.stopPropagation()">
+            <app-task-form [task]="selectedTask()" [isBusy]="isSaving()" (formSubmitted)="saveTask($event)"
+                (cancelled)="closePanel()" />
+        </div>
+    </section>
+    }
+</main>
