@@ -25,14 +25,19 @@ export const routes: Routes = [
     },
     {
         path: 'tasks',
-        // canActivate: [ authGuard ],
+        canActivate: [ authGuard ],
         loadComponent: () => import('./features/tasks/pages/task-page.component').then((m) => m.TaskPageComponent)
     },
     {
         path: 'settings',
-        // canActivate: [ authGuard ],
+        canActivate: [ authGuard ],
         loadComponent: () =>
             import('./features/auth/pages/user-settings-page.component').then((m) => m.UserSettingsPageComponent)
+    },
+    {
+        path: 'angular-apis-demo',
+        loadComponent: () =>
+            import('./features/demo/pages/angular-apis-demo.component').then((m) => m.AngularApisDemoComponent)
     },
     {
         path: '**',

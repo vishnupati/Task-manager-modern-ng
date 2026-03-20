@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 
 import { AUTH_API_URL, SSO_CALLBACK_PATH } from '../config/api.config';
+import { LOCAL_STORAGE } from '../config/local-storage.token';
 import { AuthResponse, AuthUser, LoginPayload, SignupPayload, SsoProvider } from '../models/auth-user.model';
 
 const TOKEN_STORAGE_KEY = 'tm_access_token';
@@ -13,6 +14,7 @@ const USER_STORAGE_KEY = 'tm_user';
 export class UserAuthService {
     private readonly http = inject(HttpClient);
     private readonly router = inject(Router);
+    private readonly storage = inject(LOCAL_STORAGE);
 
     readonly token = signal<string | null>(this.restoreToken());
     readonly user = signal<AuthUser | null>(this.restoreUser());
@@ -49,10 +51,11 @@ export class UserAuthService {
         };
 
         this.user.set(nextUser);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+        this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
     }
 
     startSso(provider: SsoProvider, redirectTo?: string): void {
+        console.log(`Starting SSO login with provider: ${provider}, redirectTo: ${redirectTo}`);
         const callbackUrl = new URL(SSO_CALLBACK_PATH, window.location.origin);
         if (redirectTo) {
             callbackUrl.searchParams.set('redirectTo', redirectTo);
@@ -64,7 +67,7 @@ export class UserAuthService {
     }
 
     handleSsoCallback(params: URLSearchParams): Observable<boolean> {
-        const token = params.get('token');
+        const token = params.get('access_token');
         if (token) {
             const user = this.extractUserFromParams(params);
             if (!user) {
@@ -73,6 +76,19 @@ export class UserAuthService {
 
             this.persistSession({ token, user });
             return of(true);
+        }
+
+        const idToken = params.get('idToken');
+        if (idToken) {
+            return this.http
+                .post<AuthResponse>(`${AUTH_API_URL}/sso/verify`, {
+                    idToken
+                })
+                .pipe(
+                    tap((response) => this.persistSession(response)),
+                    map(() => true),
+                    catchError(() => of(false))
+                );
         }
 
         const code = params.get('code');
@@ -96,24 +112,33 @@ export class UserAuthService {
         this.token.set(payload.token);
         this.user.set(payload.user);
 
-        localStorage.setItem(TOKEN_STORAGE_KEY, payload.token);
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(payload.user));
+        this.storage.setItem(TOKEN_STORAGE_KEY, payload.token);
+        this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(payload.user));
+    }
+
+    googleSignUpOrLogin(idToken: string, isSignup: boolean = false): Observable<AuthUser> {
+        return this.http.get<AuthResponse>(`${AUTH_API_URL}/sso/google`, {
+            params: { idToken }
+        }).pipe(
+            tap((response) => this.persistSession(response)),
+            map((response) => response.user)
+        );
     }
 
     private clearSession(): void {
         this.token.set(null);
         this.user.set(null);
 
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        localStorage.removeItem(USER_STORAGE_KEY);
+        this.storage.removeItem(TOKEN_STORAGE_KEY);
+        this.storage.removeItem(USER_STORAGE_KEY);
     }
 
     private restoreToken(): string | null {
-        return localStorage.getItem(TOKEN_STORAGE_KEY);
+        return this.storage.getItem(TOKEN_STORAGE_KEY);
     }
 
     private restoreUser(): AuthUser | null {
-        const raw = localStorage.getItem(USER_STORAGE_KEY);
+        const raw = this.storage.getItem(USER_STORAGE_KEY);
         if (!raw) {
             return null;
         }

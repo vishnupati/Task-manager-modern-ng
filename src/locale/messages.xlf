@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="apisDemoTitle" datatype="html">
+        <source>Angular APIs Showcase</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="apisDemoSubtitle" datatype="html">
+        <source>Animation, ARIA patterns, CDK drag drop, localization, and service worker basics.</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="taskOne" datatype="html">
+        <source>Implement ARIA menu</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="taskTwo" datatype="html">
+        <source>Add drag and drop</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="taskThree" datatype="html">
+        <source>Configure service worker</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">39</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tabOverview" datatype="html">
+        <source>Overview</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tabA11y" datatype="html">
+        <source>Accessibility</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="tabSw" datatype="html">
+        <source>Service Worker</source>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app/features/demo/pages/angular-apis-demo.component.ts</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

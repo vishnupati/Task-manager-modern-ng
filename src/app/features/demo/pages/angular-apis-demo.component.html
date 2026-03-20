@@ -1,0 +1,191 @@
+<main class="demo-shell">
+    <section class="demo-hero">
+        <p class="eyebrow">Angular APIs</p>
+        <h1>{{ localizedTitle }}</h1>
+        <p>{{ localizedSubtitle }}</p>
+    </section>
+
+    <section class="demo-block">
+        <header>
+            <h2>Animation API</h2>
+            <button type="button" (click)="toggleAnimatedPanel()">Toggle Animated Panel</button>
+        </header>
+
+        @if (showAnimatedPanel()) {
+        <div @panelMotion class="animated-panel" role="status" aria-live="polite">
+            Current tab: {{ activeTabLabel() }}
+        </div>
+        }
+    </section>
+
+    <section class="demo-block">
+        <header>
+            <h2>ARIA Tabs + Toolbar</h2>
+        </header>
+
+        <div ngTabs>
+            <div ngTabList class="tablist" [selectedTab]="selectedTab()"
+                (selectedTabChange)="onSelectedTabChange($event)">
+                <button ngTab value="overview" (click)="selectTab('overview')">Overview</button>
+                <button ngTab value="accessibility" (click)="selectTab('accessibility')">Accessibility</button>
+                <button ngTab value="sw" (click)="selectTab('sw')">Service Worker</button>
+            </div>
+
+            <div ngToolbar class="toolbar" [values]="selectedTools()" (valuesChange)="onToolbarValuesChange($event)">
+                <button ngToolbarWidget value="toggle-panel" type="button" (click)="toggleAnimatedPanel()">Toggle
+                    Animation</button>
+                <div ngToolbarWidgetGroup>
+                    <button ngToolbarWidget value="tool-grid" type="button">Grid Tool</button>
+                    <button ngToolbarWidget value="tool-list" type="button">List Tool</button>
+                </div>
+            </div>
+
+            <section ngTabPanel value="overview" class="tab-panel">
+                <ng-template ngTabContent>
+                    <p>Overview tab content using Angular ARIA tab directives.</p>
+                </ng-template>
+            </section>
+
+            <section ngTabPanel value="accessibility" class="tab-panel">
+                <ng-template ngTabContent>
+                    <p>Accessibility tab with Angular ARIA grid, listbox, tree, menu, and accordion patterns.</p>
+                </ng-template>
+            </section>
+
+            <section ngTabPanel value="sw" class="tab-panel">
+                <ng-template ngTabContent>
+                    <p>Service worker tab describing offline asset caching and update strategy.</p>
+                </ng-template>
+            </section>
+        </div>
+    </section>
+
+    <section class="demo-grid-wrap">
+        <article class="demo-block">
+            <h2>ARIA Grid (Angular)</h2>
+            <table ngGrid class="aria-table" [enableSelection]="true" selectionMode="follow">
+                <tr ngGridRow>
+                    <th ngGridCell role="columnheader">Task</th>
+                    <th ngGridCell role="columnheader">Status</th>
+                    <th ngGridCell role="columnheader">Action</th>
+                </tr>
+                <tr ngGridRow>
+                    <td ngGridCell>Auth flow</td>
+                    <td ngGridCell>Done</td>
+                    <td ngGridCell><button ngGridCellWidget type="button">Open</button></td>
+                </tr>
+                <tr ngGridRow>
+                    <td ngGridCell>Angular APIs demo</td>
+                    <td ngGridCell>In progress</td>
+                    <td ngGridCell><button ngGridCellWidget type="button">Inspect</button></td>
+                </tr>
+            </table>
+        </article>
+
+        <article class="demo-block">
+            <h2>ARIA Table</h2>
+            <table role="table" aria-label="Release checklist" class="aria-table">
+                <thead>
+                    <tr role="row">
+                        <th role="columnheader">Item</th>
+                        <th role="columnheader">Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr role="row">
+                        <td role="cell">Localization init</td>
+                        <td role="cell">Frontend</td>
+                    </tr>
+                    <tr role="row">
+                        <td role="cell">SW registration</td>
+                        <td role="cell">Platform</td>
+                    </tr>
+                </tbody>
+            </table>
+        </article>
+
+        <article class="demo-block">
+            <h2>ARIA Listbox + Combobox (Angular)</h2>
+            <div ngCombobox class="combo-wrap" filterMode="manual">
+                <input ngComboboxInput [(value)]="searchText" placeholder="Type to filter priorities" />
+                <ng-template ngComboboxPopupContainer>
+                    <ul ngListbox [values]="selectedPriorities()" (valuesChange)="onPrioritiesChange($event)">
+                        <li ngOption value="high" label="High">High</li>
+                        <li ngOption value="medium" label="Medium">Medium</li>
+                        <li ngOption value="low" label="Low">Low</li>
+                    </ul>
+                </ng-template>
+            </div>
+        </article>
+    </section>
+
+    <section class="demo-grid-wrap">
+        <article class="demo-block">
+            <h2>ARIA Tree (Angular)</h2>
+            <ul ngTree class="tree" #demoTree="ngTree" selectionMode="explicit">
+                <li ngTreeItem #frontendItem="ngTreeItem" [parent]="demoTree" value="frontend"
+                    [expanded]="treeExpanded()" (expandedChange)="treeExpanded.set($event)">
+                    Frontend
+                    <ul role="group">
+                        <ng-template ngTreeItemGroup #frontendGroup="ngTreeItemGroup" [ownedBy]="frontendItem">
+                            <li ngTreeItem [parent]="frontendGroup" value="animations">Animations</li>
+                            <li ngTreeItem [parent]="frontendGroup" value="localization">Localization</li>
+                        </ng-template>
+                    </ul>
+                </li>
+                <li ngTreeItem [parent]="demoTree" value="backend">Backend</li>
+            </ul>
+
+            <div ngAccordionGroup class="accordion-wrap" [multiExpandable]="true">
+                <h3>
+                    <button ngAccordionTrigger [panel]="panelA">Accordion A</button>
+                </h3>
+                <section ngAccordionPanel #panelA="ngAccordionPanel">
+                    <ng-template ngAccordionContent>
+                        <p>Accordion content A rendered with ngAccordionContent.</p>
+                    </ng-template>
+                </section>
+
+                <h3>
+                    <button ngAccordionTrigger [panel]="panelB">Accordion B</button>
+                </h3>
+                <section ngAccordionPanel #panelB="ngAccordionPanel">
+                    <ng-template ngAccordionContent>
+                        <p>Accordion content B rendered with ngAccordionContent.</p>
+                    </ng-template>
+                </section>
+            </div>
+        </article>
+
+        <article class="demo-block">
+            <h2>ARIA Menu + MenuBar (Angular)</h2>
+            <div ngMenuBar class="toolbar">
+                <button ngMenuTrigger [menu]="quickActionsMenu">Quick actions</button>
+            </div>
+
+            <div ngMenu #quickActionsMenu="ngMenu" class="menu" (itemSelected)="pickMenuAction($event)">
+                <ng-template ngMenuContent>
+                    <button ngMenuItem value="refresh" type="button">Refresh data</button>
+                    <button ngMenuItem value="sync" type="button">Sync now</button>
+                    <button ngMenuItem value="clear" type="button">Clear cache</button>
+                </ng-template>
+            </div>
+        </article>
+    </section>
+
+    <section class="demo-block">
+        <header>
+            <h2>CDK Drag Drop</h2>
+            <p>Reorder these tasks using drag and drop.</p>
+        </header>
+
+        <div cdkDropList [cdkDropListData]="backlog()" class="dnd-list" (cdkDropListDropped)="drop($event)">
+            @for (item of backlog(); track item) {
+            <div cdkDrag class="dnd-item" role="article" [attr.aria-label]="item">
+                <span class="drag-handle" aria-hidden="true">::</span>
+                <span>{{ item }}</span>
+            </div>
+            }
+        </div>
+    </section>
+</main>

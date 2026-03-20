@@ -8,7 +8,8 @@
         <p class="error-banner">{{ errorMessage() }}</p>
         }
 
-        <form (ngSubmit)="submit()" novalidate>
+        <!-- <form (ngSubmit)="submit($event)" (submit)="$event.preventDefault()" novalidate> -->
+        <form (submit)="submit($event)"  novalidate>
             <label>
                 Email
                 <input type="email" [formField]="loginForm.email" autocomplete="email" />

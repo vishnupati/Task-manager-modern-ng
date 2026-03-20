@@ -3,7 +3,7 @@
         <h1>User settings</h1>
         <p>Manage your profile information.</p>
 
-        <form (ngSubmit)="save()" novalidate>
+        <form (submit)="save($event)" novalidate>
             <label>
                 Name
                 <input type="text" [formField]="settingsForm.name" autocomplete="name" />

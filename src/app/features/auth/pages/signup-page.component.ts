@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
+import { GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../../../core/config/api.config';
 
 interface SignupForm {
     name: string;
@@ -46,7 +47,8 @@ export class SignupPageComponent {
         this.signupForm.name().valid() && this.signupForm.email().valid() && this.signupForm.password().valid()
     );
 
-    submit(): void {
+    submit(event: Event): void {
+        event.preventDefault();
         this.errorMessage.set('');
         if (!this.isFormValid()) {
             this.signupForm.name().markAsTouched();
@@ -70,6 +72,101 @@ export class SignupPageComponent {
     }
 
     signupWithSso(provider: 'google' | 'github' | 'microsoft'): void {
-        this.auth.startSso(provider, '/tasks');
+        if (provider === 'google') {
+            this.signupWithGoogle();
+        } else if (provider === 'github') {
+            this.signupWithGithub();
+        } else {
+            this.auth.startSso(provider, '/tasks');
+        }
+    }
+
+    signupWithGithub() {
+        window.location.href = 'https://github.com/login/oauth/authorize' +
+            `?client_id=${GITHUB_CLIENT_ID}` +
+            `&redirect_uri=http://localhost:9000/api/auth/github/callback` +
+            `&scope=user:email`;
+    }
+
+    // private signupWithGoogle(): void {
+    //     this.isSubmitting.set(true);
+
+    //     if (!(window as any).google?.accounts?.oauth2) {
+    //         this.errorMessage.set('Google SDK not loaded');
+    //         this.isSubmitting.set(false);
+    //         return;
+    //     }
+
+    //     (window as any).google.accounts.oauth2.initTokenClient({
+    //         client_id: this.getGoogleClientId(),
+    //         scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+    //         callback: (response: any) => this.handleGoogleResponse(response),
+    //     }).requestAccessToken({ prompt: 'consent' });
+    // }
+    private signupWithGoogle(): void {
+        this.isSubmitting.set(true);
+
+        const google = (window as any).google;
+
+        if (!google?.accounts?.id) {
+            this.errorMessage.set('Google SDK not loaded');
+            this.isSubmitting.set(false);
+            return;
+        }
+
+        google.accounts.id.initialize({
+            client_id: this.getGoogleClientId(),
+            callback: (response: any, error: Error) => this.handleGoogleResponse(response, error),
+        });
+
+        google.accounts.id.prompt(); // opens Google popup
+    }
+
+    // private handleGoogleResponse(response: any): void {
+    //     if (!response.access_token) {
+    //         this.errorMessage.set('Failed to get Google authorization');
+    //         this.isSubmitting.set(false);
+    //         return;
+    //     }
+
+    //     this.auth.googleSignUpOrLogin(response.access_token, true).subscribe({
+    //         next: () => {
+    //             this.notifications.success('Account created successfully with Google.');
+    //             this.isSubmitting.set(false);
+    //             this.router.navigateByUrl('/tasks');
+    //         },
+    //         error: (error: HttpErrorResponse) => {
+    //             this.isSubmitting.set(false);
+    //             this.errorMessage.set(error.error?.message ?? 'Google sign-up failed. Please try again.');
+    //         }
+    //     });
+    // }
+
+    private handleGoogleResponse(response: any, error: Error): void {
+        if (error) {
+            this.errorMessage.set('Failed to get Google authorization');
+            this.isSubmitting.set(false);
+            return;
+        }
+
+        const idToken = response.credential;
+        console.log('Received Google ID token:', idToken);
+
+        this.auth.googleSignUpOrLogin(idToken, true).subscribe({
+            next: () => {
+                this.notifications.success('Signup successful');
+                this.isSubmitting.set(false);
+                this.router.navigateByUrl('/tasks');
+            },
+            error: (err) => {
+                this.isSubmitting.set(false);
+                this.errorMessage.set(err.error?.message || 'Google login failed');
+            }
+        });
+    }
+
+    private getGoogleClientId(): string {
+        // return `${GOOGLE_CLIENT_ID}.apps.googleusercontent.com`;
+        return `${GOOGLE_CLIENT_ID}`;
     }
 }

@@ -53,7 +53,8 @@ export class UserSettingsPageComponent {
         });
     }
 
-    save(): void {
+    save(event: Event): void {
+        event.preventDefault();
         if (!this.canSave()) {
             this.settingsForm.name().markAsTouched();
             this.settingsForm.email().markAsTouched();

@@ -1,0 +1,130 @@
+.demo-shell {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.demo-hero,
+.demo-block {
+    border: 1px solid #d4d7de;
+    border-radius: 12px;
+    padding: 1rem;
+    background: #ffffff;
+}
+
+.eyebrow {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5e6472;
+}
+
+.animated-panel {
+    margin-top: 0.75rem;
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #e9f2ff;
+    color: #14345f;
+    font-weight: 600;
+}
+
+.tablist,
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.tab-panel {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 10px;
+    background: #f4f7fb;
+}
+
+.demo-grid-wrap {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.aria-grid {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.grid-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.5rem;
+}
+
+.grid-row.head {
+    font-weight: 700;
+}
+
+.aria-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.aria-table th,
+.aria-table td {
+    border: 1px solid #d4d7de;
+    padding: 0.4rem;
+    text-align: left;
+}
+
+.listbox,
+.tree,
+.menu {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.listbox li,
+.tree li,
+.menu li {
+    border: 1px solid #d4d7de;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.35rem;
+    background: #fafbfe;
+}
+
+.tooltip-text {
+    margin-top: 0.5rem;
+    color: #354052;
+}
+
+.dnd-list {
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.dnd-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem;
+    border-radius: 10px;
+    border: 1px solid #ccd3dd;
+    background: #f8fbff;
+}
+
+.drag-handle {
+    font-weight: 700;
+    cursor: grab;
+    color: #5d6a7c;
+}
+
+@media (max-width: 680px) {
+    .demo-shell {
+        padding: 0.75rem;
+    }
+}

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en-US" target-language="hi" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="apisDemoTitle" datatype="html">
+        <source>Angular APIs Showcase</source>
+        <target>Angular API प्रदर्शन</target>
+      </trans-unit>
+      <trans-unit id="apisDemoSubtitle" datatype="html">
+        <source>Animation, ARIA patterns, CDK drag drop, localization, and service worker basics.</source>
+        <target>एनीमेशन, ARIA पैटर्न, CDK ड्रैग ड्रॉप, लोकलाइज़ेशन और सर्विस वर्कर की मूल बातें।</target>
+      </trans-unit>
+      <trans-unit id="taskOne" datatype="html">
+        <source>Implement ARIA menu</source>
+        <target>ARIA मेनू लागू करें</target>
+      </trans-unit>
+      <trans-unit id="taskTwo" datatype="html">
+        <source>Add drag and drop</source>
+        <target>ड्रैग और ड्रॉप जोड़ें</target>
+      </trans-unit>
+      <trans-unit id="taskThree" datatype="html">
+        <source>Configure service worker</source>
+        <target>सर्विस वर्कर कॉन्फ़िगर करें</target>
+      </trans-unit>
+      <trans-unit id="tabOverview" datatype="html">
+        <source>Overview</source>
+        <target>सारांश</target>
+      </trans-unit>
+      <trans-unit id="tabA11y" datatype="html">
+        <source>Accessibility</source>
+        <target>सुगम्यता</target>
+      </trans-unit>
+      <trans-unit id="tabSw" datatype="html">
+        <source>Service Worker</source>
+        <target>सर्विस वर्कर</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

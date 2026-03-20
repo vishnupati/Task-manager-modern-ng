@@ -5,18 +5,26 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:hi": "ng build --configuration production,hi",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "i18n:extract": "ng extract-i18n --output-path src/locale",
+    "i18n:extract:json": "ng extract-i18n --format json --output-path src/locale"
   },
   "private": true,
   "packageManager": "npm@11.6.1",
   "dependencies": {
+    "@angular/animations": "21.2.4",
+    "@angular/aria": "21.2.3",
+    "@angular/cdk": "^21.2.3",
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",
     "@angular/forms": "^21.2.0",
+    "@angular/localize": "21.2.4",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "@angular/service-worker": "21.2.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
