@@ -8,14 +8,14 @@
         <p class="error-banner">{{ errorMessage() }}</p>
         }
 
-        <form (submit)="submit($event)" novalidate>
+        <form (submit)="onSubmit($event)" novalidate>
             <label>
                 Name
                 <input type="text" [formField]="signupForm.name" autocomplete="name" />
             </label>
             @if (signupForm.name().touched() && signupForm.name().invalid()) {
             <ul class="error-list">
-                @for (error of signupForm.name().errors(); track error) {
+                @for (error of signupForm.name().errors(); track error.kind) {
                 <li class="hint">{{ error.message }}</li>
                 }
             </ul>
@@ -27,7 +27,7 @@
             </label>
             @if (signupForm.email().touched() && signupForm.email().invalid()) {
             <ul class="error-list">
-                @for (error of signupForm.email().errors(); track error) {
+                @for (error of signupForm.email().errors(); track error.kind) {
                 <li class="hint">{{ error.message }}</li>
                 }
             </ul>
@@ -39,13 +39,13 @@
             </label>
             @if (signupForm.password().touched() && signupForm.password().invalid()) {
             <ul class="error-list">
-                @for (error of signupForm.password().errors(); track error) {
+                @for (error of signupForm.password().errors(); track error.kind) {
                 <li class="hint">{{ error.message }}</li>
                 }
             </ul>
             }
 
-            <button class="primary" type="submit" [disabled]="isSubmitting() || !isFormValid()">
+            <button class="primary" type="submit" [disabled]="isSubmitting() || signupForm().invalid()">
                 {{ isSubmitting() ? 'Creating account...' : 'Create account' }}
             </button>
         </form>

@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { email, form, FormField, minLength, required } from '@angular/forms/signals';
+import { email, form, FormField, minLength, required, submit } from '@angular/forms/signals';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
@@ -47,26 +48,21 @@ export class SignupPageComponent {
         this.signupForm.name().valid() && this.signupForm.email().valid() && this.signupForm.password().valid()
     );
 
-    submit(event: Event): void {
+    onSubmit(event: Event): void {
         event.preventDefault();
-        this.errorMessage.set('');
-        if (!this.isFormValid()) {
-            this.signupForm.name().markAsTouched();
-            this.signupForm.email().markAsTouched();
-            this.signupForm.password().markAsTouched();
-            return;
-        }
-
-        this.isSubmitting.set(true);
-        this.auth.signup(this.signupModel()).subscribe({
-            next: () => {
+        submit(this.signupForm, async () => {
+            this.errorMessage.set('');
+            this.isSubmitting.set(true);
+            try {
+                await firstValueFrom(this.auth.signup(this.signupModel()));
                 this.notifications.success('Account created successfully.');
-                this.isSubmitting.set(false);
                 this.router.navigateByUrl('/tasks');
-            },
-            error: (error: HttpErrorResponse) => {
+            } catch (error) {
+                if (error instanceof HttpErrorResponse) {
+                    this.errorMessage.set(error.error?.message ?? 'Unable to create account right now.');
+                }
+            } finally {
                 this.isSubmitting.set(false);
-                this.errorMessage.set(error.error?.message ?? 'Unable to create account right now.');
             }
         });
     }

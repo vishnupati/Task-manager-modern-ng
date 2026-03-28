@@ -3,14 +3,14 @@
         <h1>User settings</h1>
         <p>Manage your profile information.</p>
 
-        <form (submit)="save($event)" novalidate>
+        <form (submit)="onSave($event)" novalidate>
             <label>
                 Name
                 <input type="text" [formField]="settingsForm.name" autocomplete="name" />
             </label>
             @if (settingsForm.name().touched() && settingsForm.name().invalid()) {
             <ul class="error-list">
-                @for (error of settingsForm.name().errors(); track error) {
+                @for (error of settingsForm.name().errors(); track error.kind) {
                 <li>{{ error.message }}</li>
                 }
             </ul>

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { form, FormField, minLength, required } from '@angular/forms/signals';
+import { form, FormField, minLength, required, submit } from '@angular/forms/signals';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
@@ -36,7 +36,7 @@ export class UserSettingsPageComponent {
 
     readonly isFormValid = computed(() => this.settingsForm.name().valid() && this.settingsForm.email().valid());
 
-    readonly canSave = computed(() => this.isFormValid() && !this.isSaving());
+    readonly canSave = computed(() => this.settingsForm().valid() && !this.isSaving());
 
     constructor() {
         effect(() => {
@@ -53,17 +53,16 @@ export class UserSettingsPageComponent {
         });
     }
 
-    save(event: Event): void {
+    onSave(event: Event): void {
         event.preventDefault();
-        if (!this.canSave()) {
-            this.settingsForm.name().markAsTouched();
-            this.settingsForm.email().markAsTouched();
-            return;
-        }
-
-        this.isSaving.set(true);
-        this.auth.updateLocalProfile({ name: this.settingsModel().name });
-        this.notifications.success('Profile updated.');
-        this.isSaving.set(false);
+        submit(this.settingsForm, async () => {
+            this.isSaving.set(true);
+            try {
+                this.auth.updateLocalProfile({ name: this.settingsModel().name });
+                this.notifications.success('Profile updated.');
+            } finally {
+                this.isSaving.set(false);
+            }
+        });
     }
 }

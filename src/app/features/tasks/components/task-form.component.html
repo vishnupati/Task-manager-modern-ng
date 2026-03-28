@@ -1,40 +1,42 @@
-<section class="task-form">
-    <header>
-        <h2>{{ isEditMode() ? 'Edit task' : 'Add new task' }}</h2>
-        <p>Capture what matters and keep delivery visible.</p>
-    </header>
+<form (submit)="onSubmit($event)" novalidate>
+    <section class="task-form">
+        <header>
+            <h2>{{ isEditMode() ? 'Edit task' : 'Add new task' }}</h2>
+            <p>Capture what matters and keep delivery visible.</p>
+        </header>
 
-    <label>
-        <span>Title</span>
-        <input type="text" [formField]="taskForm.title" placeholder="Ship Angular signals migration" />
-        @if (taskForm.title().touched() && taskForm.title().invalid()) {
-        <ul class="error-list">
-            @for (error of taskForm.title().errors(); track error) {
-            <li class="error">{{ error.message }}</li>
+        <label>
+            <span>Title</span>
+            <input type="text" [formField]="taskForm.title" placeholder="Ship Angular signals migration" />
+            @if (taskForm.title().touched() && taskForm.title().invalid()) {
+            <ul class="error-list">
+                @for (error of taskForm.title().errors(); track error.kind) {
+                <li class="error">{{ error.message }}</li>
+                }
+            </ul>
             }
-        </ul>
+        </label>
+
+        <label>
+            <span>Description</span>
+            <textarea [formField]="taskForm.description" rows="4" placeholder="Optional details"></textarea>
+        </label>
+
+        @if (isEditMode()) {
+        <label>
+            <span>Status</span>
+            <select [formField]="taskForm.status">
+                <option value="pending">Pending</option>
+                <option value="completed">Completed</option>
+            </select>
+        </label>
         }
-    </label>
 
-    <label>
-        <span>Description</span>
-        <textarea [formField]="taskForm.description" rows="4" placeholder="Optional details"></textarea>
-    </label>
-
-    @if (isEditMode()) {
-    <label>
-        <span>Status</span>
-        <select [formField]="taskForm.status">
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-        </select>
-    </label>
-    }
-
-    <footer>
-        <button type="button" class="ghost" (click)="cancelled.emit()">Cancel</button>
-        <button type="button" class="primary" [disabled]="isBusy()" (click)="submit()">
-            {{ isBusy() ? 'Saving...' : isEditMode() ? 'Save changes' : 'Create task' }}
-        </button>
-    </footer>
-</section>
+        <footer>
+            <button type="button" class="ghost" (click)="cancelled.emit()">Cancel</button>
+            <button type="submit" class="primary" [disabled]="isBusy() || taskForm().invalid()">
+                {{ isBusy() ? 'Saving...' : isEditMode() ? 'Save changes' : 'Create task' }}
+            </button>
+        </footer>
+    </section>
+</form>

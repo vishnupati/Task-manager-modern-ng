@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { email, form, FormField, required } from '@angular/forms/signals';
+import { email, form, FormField, required, submit } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
@@ -41,25 +42,21 @@ export class LoginPageComponent {
 
     readonly isFormValid = computed(() => this.loginForm.email().valid() && this.loginForm.password().valid());
 
-    submit(event: Event): void {
+    onSubmit(event: Event): void {
         event.preventDefault();
-        this.errorMessage.set('');
-        if (!this.isFormValid()) {
-            this.loginForm.email().markAsTouched();
-            this.loginForm.password().markAsTouched();
-            return;
-        }
-
-        this.isSubmitting.set(true);
-        this.auth.login(this.loginModel()).subscribe({
-            next: () => {
+        submit(this.loginForm, async () => {
+            this.errorMessage.set('');
+            this.isSubmitting.set(true);
+            try {
+                await firstValueFrom(this.auth.login(this.loginModel()));
                 this.notifications.success('Welcome back.');
-                this.isSubmitting.set(false);
                 this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('redirectTo') ?? '/tasks');
-            },
-            error: (error: HttpErrorResponse) => {
+            } catch (error) {
+                if (error instanceof HttpErrorResponse) {
+                    this.errorMessage.set(error.error?.message ?? 'Unable to login. Please try again.');
+                }
+            } finally {
                 this.isSubmitting.set(false);
-                this.errorMessage.set(error.error?.message ?? 'Unable to login. Please try again.');
             }
         });
     }

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, input, output, signal } from '@angular/core';
-import { form, FormField, required } from '@angular/forms/signals';
+import { form, FormField, required, submit } from '@angular/forms/signals';
 
 import { Task, TaskFormValue } from '../../../core/models/task.model';
 import { TaskStatus } from '../../../core/models/task-status.type';
@@ -49,16 +49,14 @@ export class TaskFormComponent {
         });
     }
 
-    submit(): void {
-        if (!this.isFormValid()) {
-            this.taskForm.title().markAsTouched();
-            return;
-        }
-
-        this.formSubmitted.emit({
-            title: this.taskModel().title.trim(),
-            description: this.taskModel().description.trim(),
-            status: this.taskModel().status
+    onSubmit(event: Event): void {
+        event.preventDefault();
+        submit(this.taskForm, async () => {
+            this.formSubmitted.emit({
+                title: this.taskModel().title.trim(),
+                description: this.taskModel().description.trim(),
+                status: this.taskModel().status
+            });
         });
     }
 
