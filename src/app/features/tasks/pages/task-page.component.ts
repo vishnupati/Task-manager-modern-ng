@@ -1,44 +1,33 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { HttpErrorResponse } from '@angular/common/http';
 import { debounceTime, distinctUntilChanged, of, startWith, Subject, switchMap } from 'rxjs';
 
-import { TaskFormValue } from '../../../core/models/task.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { TaskStoreService } from '../../../core/services/task-store.service';
-import { TaskFormComponent } from '../components/task-form.component';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
     selector: 'app-task-page',
     standalone: true,
-    imports: [ CommonModule, TaskFormComponent ],
+    imports: [ CommonModule ],
     templateUrl: './task-page.component.html',
     styleUrl: './task-page.component.scss'
 })
 export class TaskPageComponent {
     private readonly store = inject(TaskStoreService);
     private readonly notifications = inject(NotificationService);
+    private readonly router = inject(Router);
     private readonly searchInput$ = new Subject<string>();
 
-    readonly isPanelOpen = signal(false);
-    readonly editingId = signal<string | null>(null);
     readonly errorMessage = signal('');
     readonly currentPage = signal(1);
     readonly pageSize = signal(6);
 
     readonly tasks = this.store.tasks;
-    readonly isSaving = this.store.isSaving;
     readonly stats = computed(() => this.store.statsResource.value() ?? { total: 0, pending: 0, completed: 0 });
     readonly isLoading = computed(() => this.store.tasksResource.isLoading());
-    readonly selectedTask = computed(() => {
-        const editId = this.editingId();
-        if (!editId) {
-            return null;
-        }
-
-        return this.tasks().find((task) => task.id === editId) ?? null;
-    });
 
     readonly query = toSignal(
         this.searchInput$.pipe(
@@ -97,46 +86,15 @@ export class TaskPageComponent {
     }
 
     openCreate(): void {
-        this.editingId.set(null);
-        this.isPanelOpen.set(true);
+        this.router.navigate(['/task/new']);
     }
 
     openEdit(taskId: string): void {
-        this.editingId.set(taskId);
-        this.store.selectTask(taskId);
-        this.isPanelOpen.set(true);
-    }
-
-    closePanel(): void {
-        this.isPanelOpen.set(false);
-        this.editingId.set(null);
-        this.store.selectTask(null);
+        this.router.navigate(['/task', taskId]);
     }
 
     onSearchChange(value: string): void {
         this.searchInput$.next(value);
-    }
-
-    saveTask(formValue: TaskFormValue): void {
-        this.errorMessage.set('');
-        const editingTaskId = this.editingId();
-
-        if (!editingTaskId) {
-            this.store.createTask(formValue).subscribe({
-                next: () => {
-                    this.notifications.success('Task created successfully.');
-                    this.closePanel();
-                },
-                error: (error: HttpErrorResponse) => {
-                    this.errorMessage.set(error.error?.message ?? 'Unable to create task right now.');
-                }
-            });
-            return;
-        }
-
-        this.store.queueTaskUpdate(editingTaskId, formValue);
-        this.notifications.success('Task updated successfully.');
-        this.closePanel();
     }
 
     toggleStatus(taskId: string, completed: boolean): void {

@@ -72,12 +72,12 @@
     </section>
     }
 
-    @if (isPanelOpen()) {
+    <!-- @if (isPanelOpen()) {
     <section class="panel-overlay" (click)="closePanel()">
         <div class="panel" (click)="$event.stopPropagation()">
             <app-task-form [task]="selectedTask()" [isBusy]="isSaving()" (formSubmitted)="saveTask($event)"
                 (cancelled)="closePanel()" />
         </div>
     </section>
-    }
+    } -->
 </main>
