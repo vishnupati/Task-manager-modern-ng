@@ -33,8 +33,8 @@
         }
 
         <footer>
-            <button type="button" class="ghost" (click)="cancelled.emit()">Cancel</button>
-            <button type="submit" class="primary" [disabled]="isBusy() || taskForm().invalid()">
+            <button type="button" class="ghost" (click)="cancel()">Cancel</button>
+            <button type="submit" class="primary" [disabled]="isBusy() || !isFormValid()">
                 {{ isBusy() ? 'Saving...' : isEditMode() ? 'Save changes' : 'Create task' }}
             </button>
         </footer>

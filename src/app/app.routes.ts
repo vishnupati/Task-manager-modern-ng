@@ -29,6 +29,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/tasks/pages/task-page.component').then((m) => m.TaskPageComponent)
     },
     {
+        path: 'task/new',
+        canActivate: [ authGuard ],
+        loadComponent: () => import('./features/tasks/components/task-form.component').then((m) => m.TaskFormComponent)
+    },
+    {
+        path: 'task/:id',
+        canActivate: [ authGuard ],
+        loadComponent: () => import('./features/tasks/components/task-form.component').then((m) => m.TaskFormComponent)
+    },
+    {
         path: 'settings',
         canActivate: [ authGuard ],
         loadComponent: () =>
