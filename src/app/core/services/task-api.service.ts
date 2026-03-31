@@ -15,6 +15,10 @@ export class TaskApiService {
         return this.http.get<TaskDto[]>(TASKS_API_URL).pipe(map((tasks) => tasks.map(mapTaskDtoToModel)));
     }
 
+    getTask(taskId: string) {
+        return this.http.get<TaskDto>(`${TASKS_API_URL}/${taskId}`).pipe(map(mapTaskDtoToModel));
+    }
+
     createTask(payload: CreateTaskDto) {
         return this.http.post<TaskDto>(TASKS_API_URL, payload).pipe(map(mapTaskDtoToModel));
     }
