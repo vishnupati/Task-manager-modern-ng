@@ -24,8 +24,7 @@
     </section>
 
     <section class="toolbar">
-        <input type="search" placeholder="Search by title or description"
-            (input)="onSearchChange($any($event.target).value)" />
+        <app-search-input [(searchTerm)]="searchTerm" />
     </section>
 
     @if (errorMessage()) {
@@ -34,42 +33,9 @@
 
     @if (isLoading()) {
     <p class="state">Loading tasks...</p>
-    } @else if (!filteredTasks().length) {
-    <p class="state">No tasks found. Add your first task to get started.</p>
     } @else {
-    <section class="task-list">
-        @for (task of paginatedTasks(); track task.id) {
-        <article class="task-card" [class.completed]="task.status === 'completed'">
-            <header>
-                <h2>{{ task.title }}</h2>
-                <small>{{ task.createdAt | date: 'mediumDate' }}</small>
-            </header>
-
-            @if (task.description) {
-            <p>{{ task.description }}</p>
-            }
-
-            <footer>
-                <label class="toggle">
-                    <input type="checkbox" [checked]="task.status === 'completed'"
-                        (change)="toggleStatus(task.id, $any($event.target).checked)" />
-                    <span>{{ task.status === 'completed' ? 'Completed' : 'Pending' }}</span>
-                </label>
-
-                <div class="actions">
-                    <button type="button" (click)="openEdit(task.id)">Edit</button>
-                    <button type="button" class="danger" (click)="removeTask(task.id)">Delete</button>
-                </div>
-            </footer>
-        </article>
-        }
-    </section>
-
-    <section class="pager">
-        <button type="button" (click)="goToPreviousPage()" [disabled]="currentPage() === 1">Previous</button>
-        <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
-        <button type="button" (click)="goToNextPage()" [disabled]="currentPage() === totalPages()">Next</button>
-    </section>
+    <app-task-list [tasks]="paginatedTasks()" (toggleStatus)="onToggleStatus($event)" (editTask)="onEditTask($event)"
+        (deleteTask)="onDeleteTask($event)" />
     }
 
     <!-- @if (isPanelOpen()) {
