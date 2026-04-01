@@ -39,7 +39,7 @@ export class AppHeaderComponent {
 
     logout(): void {
         this.isMenuOpen.set(false);
-        this.auth.logout();
+        this.auth.logout().subscribe();
     }
 
     handleDocumentClick(event: Event): void {
