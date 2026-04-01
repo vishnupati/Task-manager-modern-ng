@@ -6,8 +6,24 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background: var(--app-surface);
+}
+
+.app-main {
+    display: flex;
+    flex: 1;
+    background: var(--app-surface);
+}
+
+.app-sidebar {
+    width: 260px;
+    background: #161b22;
+    border-right: 1px solid var(--app-border);
+    padding: 16px;
 }
 
 .app-content {
     flex: 1;
+    background: var(--app-surface);
+    padding: 24px;
 }

@@ -1,8 +1,12 @@
-<section class="toast-stack" aria-live="polite" aria-label="Notifications">
+<section class="fixed top-4 right-4 z-50 space-y-2" aria-live="polite" aria-label="Notifications">
     @for (toast of toasts(); track toast.id) {
-    <article class="toast" [class.error]="toast.type === 'error'" [class.success]="toast.type === 'success'">
-        <span>{{ toast.message }}</span>
-        <button type="button" (click)="dismiss(toast.id)">x</button>
+    <article
+        class="flex items-center justify-between px-4 py-3 rounded-md shadow-lg max-w-sm animate-in slide-in-from-right-2"
+        [class]="toast.type === 'error' ? 'bg-red-900 border border-red-700 text-red-200' : 'bg-green-900 border border-green-700 text-green-200'">
+        <span class="flex-1">{{ toast.message }}</span>
+        <button type="button" (click)="dismiss(toast.id)" class="ml-3 text-current hover:opacity-75 transition-opacity">
+            ×
+        </button>
     </article>
     }
 </section>

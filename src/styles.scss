@@ -1,10 +1,13 @@
 @use "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    --app-text: #132138;
-    --app-surface: #ffffff;
+    --app-text: #f0f6fc;
+    --app-surface: #0d1117;
+    --app-border: #30363d;
+    --app-accent: #58a6ff;
+    --app-secondary-text: #c9d1d9;
 }
 
 * {
@@ -18,7 +21,7 @@ body {
 }
 
 body {
-    font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     color: var(--app-text);
-    background: #f7f3eb;
+    background: var(--app-surface);
 }
