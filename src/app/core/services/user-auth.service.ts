@@ -34,9 +34,27 @@ export class UserAuthService {
         );
     }
 
-    logout(): void {
-        this.clearSession();
-        this.router.navigate([ '/login' ]);
+    logout(): Observable<void> {
+        const token = this.token();
+        if (!token) {
+            // If no token, just clear session and navigate
+            this.clearSession();
+            this.router.navigate([ '/login' ]);
+            return of(void 0);
+        }
+
+        return this.http.post<void>(`${AUTH_API_URL}/logout`, { refresh_token: token }).pipe(
+            tap(() => {
+                this.clearSession();
+                this.router.navigate([ '/login' ]);
+            }),
+            catchError(() => {
+                // Even if the API call fails, clear the local session
+                this.clearSession();
+                this.router.navigate([ '/login' ]);
+                return of(void 0);
+            })
+        );
     }
 
     updateLocalProfile(patch: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>): void {

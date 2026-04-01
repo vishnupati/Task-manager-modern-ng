@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, input, output, signal } from '@angular/core';
+import { Component, computed, effect, input, model, output, signal } from '@angular/core';
 import { form, FormField, required, submit } from '@angular/forms/signals';
 
 import { Task, TaskFormValue } from '../../../core/models/task.model';
@@ -19,8 +19,12 @@ interface TaskForm {
     styleUrl: './task-form.component.scss'
 })
 export class TaskFormComponent {
+
+    // Input signals for parent to child communication
     readonly task = input<Task | null>(null);
     readonly isBusy = input<boolean>(false);
+
+    // Output signals for child to parent communication
     readonly formSubmitted = output<TaskFormValue>();
     readonly cancelled = output<void>();
 
@@ -34,18 +38,20 @@ export class TaskFormComponent {
         required(p.title, { message: 'Title is required' });
     });
 
-    readonly isEditMode = computed(() => this.task() !== null);
-
-    readonly isFormValid = computed(() => this.taskForm.title().valid());
+    readonly isEditMode = computed(() => !!this.task());
+    readonly isFormValid = computed(() => this.taskForm().valid());
 
     constructor() {
         effect(() => {
             const task = this.task();
-            this.taskModel.set({
-                title: task?.title ?? '',
-                description: task?.description ?? '',
-                status: task?.status ?? 'pending'
-            });
+
+            if (task) {
+                this.taskModel.set({
+                    title: task.title,
+                    description: task.description,
+                    status: task.status
+                });
+            }
         });
     }
 
@@ -57,6 +63,9 @@ export class TaskFormComponent {
                 description: this.taskModel().description.trim(),
                 status: this.taskModel().status
             });
+
+            // Emit the form data to parent component
+            // this.formSubmitted.emit(formValue);
         });
     }
 
