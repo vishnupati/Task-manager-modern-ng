@@ -81,6 +81,9 @@ export class TaskPageComponent {
     });
 
     constructor() {
+        // Load tasks immediately
+        this.loadTasks();
+
         effect(() => {
             this.store.tasksFromReloadSignal();
         });
@@ -101,6 +104,17 @@ export class TaskPageComponent {
         effect(() => {
             const term = this.searchTerm();
             this.searchInput$.next(term);
+        });
+    }
+
+    private loadTasks(): void {
+        this.store.getTasks().subscribe({
+            next: (tasks) => {
+                this.errorMessage.set('');
+            },
+            error: (error: HttpErrorResponse) => {
+                this.errorMessage.set(error.error?.message ?? 'Unable to load tasks. Please try again.');
+            }
         });
     }
 

@@ -92,6 +92,17 @@ export class TaskStoreService {
         this.reloadRequest$.next();
     }
 
+    getTasks() {
+        console.log('TaskStoreService.getTasks() called');
+        const tasks$ = this.api.getTasks().pipe(
+            tap((tasks) => {
+                console.log('API returned tasks:', tasks);
+                this.tasks.set(tasks);
+            })
+        );
+        return tasks$;
+    }
+
     createTask(formValue: TaskFormValue) {
         this.isSaving.set(true);
         return this.api.createTask(mapCreateTaskFormToDto(formValue)).pipe(

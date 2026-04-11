@@ -6,12 +6,12 @@ import { FormsModule } from '@angular/forms';
     standalone: true,
     imports: [ FormsModule ],
     template: `
-        <input
+        <!-- <input
             type="search"
             [ngModel]="searchTerm()"
             (ngModelChange)="searchTerm.set($event)"
             placeholder="Search by title or description"
-            class="search-input" />
+            class="search-input" /> -->
         <input
             type="search"
             [(ngModel)]='searchTerm'
@@ -27,6 +27,7 @@ import { FormsModule } from '@angular/forms';
             background-color: var(--app-surface);
             color: var(--app-text);
             font-size: 14px;
+            padding-bottom: 10px;
         }
 
         .search-input:focus {

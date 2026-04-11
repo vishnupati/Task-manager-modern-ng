@@ -22,7 +22,7 @@ export class AppHeaderComponent {
     readonly isAuthenticated = this.auth.isAuthenticated;
     readonly initials = computed(() => {
         const user = this.user();
-        if (!user) {
+        if (!user || !user.name) {
             return 'GU';
         }
 

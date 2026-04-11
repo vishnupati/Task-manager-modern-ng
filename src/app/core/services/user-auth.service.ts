@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, map, Observable, of, tap } from 'rxjs';
+import { catchError, map, Observable, of, switchMap, tap } from 'rxjs';
 
 import { AUTH_API_URL, SSO_CALLBACK_PATH } from '../config/api.config';
 import { LOCAL_STORAGE } from '../config/local-storage.token';
@@ -17,25 +17,40 @@ export class UserAuthService {
     private readonly storage = inject(LOCAL_STORAGE);
 
     readonly token = signal<string | null>(this.restoreToken());
-    readonly user = signal<AuthUser | null>(this.restoreUser());
+    readonly user = signal<AuthUser | null>(null);
+
+    private getCookie(name: string): string | null {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+        return null;
+    }
     readonly isAuthenticated = computed(() => Boolean(this.token() && this.user()));
 
-    signup(payload: SignupPayload): Observable<AuthUser> {
-        return this.http.post<AuthResponse>(`${AUTH_API_URL}/signup`, payload).pipe(
+    signup(payload: SignupPayload): Observable<void> {
+        return this.http.post<{ token: string }>(`${AUTH_API_URL}/signup`, payload, { withCredentials: true }).pipe(
             tap((response) => this.persistSession(response)),
-            map((response) => response.user)
+            switchMap(() => this.getMe()),
+            tap(user => {
+                this.user.set(user);
+            }),
+            map(() => void 0)
         );
     }
 
-    login(payload: LoginPayload): Observable<AuthUser> {
-        return this.http.post<AuthResponse>(`${AUTH_API_URL}/login`, payload).pipe(
+    login(payload: LoginPayload): Observable<void> {
+        return this.http.post<{ token: string }>(`${AUTH_API_URL}/login`, payload, { withCredentials: true }).pipe(
             tap((response) => this.persistSession(response)),
-            map((response) => response.user)
+            switchMap(() => this.getMe()),
+            tap(user => {
+                this.user.set(user);
+            }),
+            map(() => void 0)
         );
     }
 
     logout(): Observable<void> {
-        return this.http.post<void>(`${AUTH_API_URL}/logout`, {}).pipe(
+        return this.http.post<void>(`${AUTH_API_URL}/logout`, {}, { withCredentials: true }).pipe(
             tap(() => {
                 this.clearSession();
                 this.router.navigate([ '/login' ]);
@@ -47,6 +62,39 @@ export class UserAuthService {
                 return of(void 0);
             })
         );
+    }
+
+    handleUnauthorized(): void {
+        this.clearSession();
+        this.router.navigate([ '/login' ]);
+    }
+
+    getMe(): Observable<AuthUser> {
+        return this.http.get<AuthUser>(`${AUTH_API_URL}/me`, { withCredentials: true });
+    }
+
+    initializeAuth(): Observable<void> {
+        const token = this.token();
+        console.log('Initializing auth, found token:', token);
+        if (token) {
+            console.log('Token exists, fetching user from /me API');
+            return this.getMe().pipe(
+                tap(user => {
+                    this.user.set(user);
+                    // this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+                    console.log('User fetched from /me and cached:', user);
+                }),
+                map(() => void 0),
+                catchError(err => {
+                    console.error('Failed to fetch user from /me:', err);
+                    console.log('Token is invalid or expired, clearing session');
+                    this.clearSession();
+                    return of(void 0);
+                })
+            );
+        }
+        console.log('No token found, skipping auth initialization');
+        return of(void 0);
     }
 
     updateLocalProfile(patch: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>): void {
@@ -85,6 +133,7 @@ export class UserAuthService {
             }
 
             this.persistSession({ token, user });
+            this.user.set(user);
             return of(true);
         }
 
@@ -93,7 +142,7 @@ export class UserAuthService {
             return this.http
                 .post<AuthResponse>(`${AUTH_API_URL}/sso/verify`, {
                     idToken
-                })
+                }, { withCredentials: true })
                 .pipe(
                     tap((response) => this.persistSession(response)),
                     map(() => true),
@@ -110,7 +159,7 @@ export class UserAuthService {
             .post<AuthResponse>(`${AUTH_API_URL}/sso/exchange`, {
                 code,
                 redirectUri: new URL(SSO_CALLBACK_PATH, window.location.origin).toString()
-            })
+            }, { withCredentials: true })
             .pipe(
                 tap((response) => this.persistSession(response)),
                 map(() => true),
@@ -118,20 +167,31 @@ export class UserAuthService {
             );
     }
 
-    private persistSession(payload: AuthResponse): void {
+    private persistSession(payload: { token: string; user?: AuthUser }): void {
         this.token.set(payload.token);
-        this.user.set(payload.user);
+        if (payload.user) {
+            this.user.set(payload.user);
+        }
 
         this.storage.setItem(TOKEN_STORAGE_KEY, payload.token);
-        this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(payload.user));
+        // if (payload.user) {
+        //     this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(payload.user));
+        // }
     }
 
-    googleSignUpOrLogin(idToken: string, isSignup: boolean = false): Observable<AuthUser> {
+    googleSignUpOrLogin(idToken: string, isSignup: boolean = false): Observable<void> {
         return this.http.get<AuthResponse>(`${AUTH_API_URL}/sso/google`, {
-            params: { idToken }
+            params: { idToken },
+            withCredentials: true
         }).pipe(
-            tap((response) => this.persistSession(response)),
-            map((response) => response.user)
+            tap((response) => {
+                this.persistSession(response);
+                if (response.user) {
+                    this.user.set(response.user);
+                    this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
+                }
+            }),
+            map(() => void 0)
         );
     }
 
@@ -140,11 +200,13 @@ export class UserAuthService {
         this.user.set(null);
 
         this.storage.removeItem(TOKEN_STORAGE_KEY);
-        this.storage.removeItem(USER_STORAGE_KEY);
+        // this.storage.removeItem(USER_STORAGE_KEY);
     }
 
     private restoreToken(): string | null {
-        return this.storage.getItem(TOKEN_STORAGE_KEY);
+        const token = this.storage.getItem(TOKEN_STORAGE_KEY);
+        console.log('Restoring token from localStorage:', token);
+        return token;
     }
 
     private restoreUser(): AuthUser | null {
