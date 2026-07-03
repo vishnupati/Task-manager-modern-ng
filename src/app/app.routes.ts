@@ -50,6 +50,11 @@ export const routes: Routes = [
             import('./features/demo/pages/angular-apis-demo.component').then((m) => m.AngularApisDemoComponent)
     },
     {
+        path: 'component-decorator-demo',
+        loadComponent: () =>
+            import('./features/demo/pages/component-decorator-demo.component').then((m) => m.ComponentDecoratorDemoComponent)
+    },
+    {
         path: '**',
         redirectTo: 'tasks'
     }

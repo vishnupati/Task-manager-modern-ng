@@ -1,10 +1,13 @@
 {
   "name": "task-management-angular-modern",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:ssr": "ng build",
+    "serve:ssr": "tsx server.ts",
     "build:hi": "ng build --configuration production,hi",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
@@ -23,20 +26,29 @@
     "@angular/forms": "^21.2.0",
     "@angular/localize": "21.2.4",
     "@angular/platform-browser": "^21.2.0",
+    "@angular/platform-server": "^21.2.9",
     "@angular/router": "^21.2.0",
     "@angular/service-worker": "21.2.4",
+    "@angular/ssr": "^21.2.7",
+    "express": "^5.2.1",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zone.js": "^0.16.1"
   },
   "devDependencies": {
     "@angular/build": "^21.2.2",
     "@angular/cli": "^21.2.2",
     "@angular/compiler-cli": "^21.2.0",
     "@tailwindcss/postcss": "^4.2.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "esbuild": "^0.28.0",
     "jsdom": "^28.0.0",
     "postcss": "^8.5.8",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.2.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2",
     "vitest": "^4.0.8"
   }

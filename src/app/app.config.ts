@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, inject, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideClientHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -12,6 +13,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    provideClientHydration(),
     provideHttpClient(withInterceptors([ authInterceptor, httpErrorInterceptor ])),
     provideRouter(routes),
     provideServiceWorker('ngsw-worker.js', {

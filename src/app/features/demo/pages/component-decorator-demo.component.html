@@ -1,0 +1,134 @@
+<div class="decorator-demo-container">
+    <header class="demo-header">
+        <h1>🔥 @Component Decorator - Complete Guide</h1>
+        <p class="subtitle">All properties with examples in one place</p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-navigation">
+        <button class="tab-btn" [class.active]="activeTab() === 'overview'" (click)="switchTab('overview')">
+            📋 Overview
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'properties'" (click)="switchTab('properties')">
+            🔧 All Properties
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'examples'" (click)="switchTab('examples')">
+            💻 Code Examples
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'quick-ref'" (click)="switchTab('quick-ref')">
+            ⚡ Quick Reference
+        </button>
+    </nav>
+
+    <!-- TAB 1: OVERVIEW -->
+    <section class="tab-content" *ngIf="activeTab() === 'overview'">
+        <div class="card">
+            <h2>Angular 21+ @Component Decorator</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h3>What is it?</h3>
+                    <p><strong>@Component</strong> is a decorator that tells Angular this is a component.</p>
+                </div>
+
+                <div class="info-item">
+                    <h3>How many properties?</h3>
+                    <p>Angular has <strong>20+ optional properties</strong>, but projects use only <strong>5-8</strong>
+                        typically.</p>
+                </div>
+
+                <div class="info-item">
+                    <h3>Which are required?</h3>
+                    <p><strong>selector</strong> and <strong>template/templateUrl</strong> - everything else is
+                        optional.</p>
+                </div>
+
+                <div class="info-item">
+                    <h3>Modern approach</h3>
+                    <p>Use <strong>standalone: true</strong> in Angular 14+ - better than NgModule.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card highlight">
+            <h3>🚀 Simplest Component (2 lines)</h3>
+            <pre><code [textContent]="simpleComponentExample"></code></pre>
+        </div>
+
+        <div class="card highlight">
+            <h3>✨ Modern Best Practice</h3>
+            <pre><code [textContent]="overviewCodeExample"></code></pre>
+        </div>
+    </section>
+
+    <!-- TAB 2: ALL PROPERTIES -->
+    <section class="tab-content" *ngIf="activeTab() === 'properties'">
+        <div *ngFor="let category of decoratorProperties()" class="card">
+            <h3 class="category-title">{{ category.category }}</h3>
+            <div class="properties-table">
+                <div *ngFor="let field of category.fields" class="property-row">
+                    <div class="property-name">{{ field.name }}</div>
+                    <div class="property-desc">{{ field.description }}</div>
+                    <div class="property-example">
+                        <small>Example:</small>
+                        <code>{{ field.example }}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TAB 3: CODE EXAMPLES -->
+    <section class="tab-content" *ngIf="activeTab() === 'examples'">
+        <div *ngFor="let example of codeExamples()" class="code-example-card">
+            <h3>{{ example.title }}</h3>
+            <pre><code [textContent]="example.code"></code></pre>
+        </div>
+    </section>
+
+    <!-- TAB 4: QUICK REFERENCE -->
+    <section class="tab-content" *ngIf="activeTab() === 'quick-ref'">
+        <div class="card">
+            <h2>⚡ Quick Reference</h2>
+
+            <div class="quick-ref-section">
+                <h3>📌 Always Use:</h3>
+                <ul>
+                    <li><strong>selector:</strong> Component tag name - 'app-my-comp'</li>
+                    <li><strong>template/templateUrl:</strong> Where your HTML is</li>
+                    <li><strong>standalone: true</strong> - Modern way (Angular 14+)</li>
+                    <li><strong>imports:</strong> If using other components/directives</li>
+                </ul>
+            </div>
+
+            <div class="quick-ref-section">
+                <h3>⚙️ Commonly Use:</h3>
+                <ul>
+                    <li><strong>styleUrl/styleUrls:</strong> CSS file path</li>
+                    <li><strong>providers:</strong> To inject services</li>
+                    <li><strong>changeDetection: OnPush</strong> - Better performance</li>
+                </ul>
+            </div>
+
+            <div class="quick-ref-section">
+                <h3>🎯 Special Cases:</h3>
+                <ul>
+                    <li><strong>host:</strong> Control host element</li>
+                    <li><strong>encapsulation:</strong> Control CSS scope</li>
+                    <li><strong>viewProviders:</strong> Only for child components</li>
+                    <li><strong>animations:</strong> If you need animations</li>
+                </ul>
+            </div>
+
+            <div class="highlight-box">
+                <h4>💎 Professional Pattern</h4>
+                <pre><code [textContent]="professionalPattern"></code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="demo-footer">
+        <p>✅ Everything compatible with modern Angular 21+</p>
+        <p>📚 More: angular.dev</p>
+    </footer>
+</div>

@@ -1,0 +1,32 @@
+.complete-example-container {
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+
+    h2 {
+        color: #1a73e8;
+        margin-top: 0;
+    }
+
+    .theme-toggle {
+        margin: 1rem 0;
+
+        .btn-secondary {
+            padding: 0.5rem 1rem;
+            background: #f0f0f0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+
+            &:hover {
+                background: #e0e0e0;
+            }
+        }
+    }
+
+    p {
+        color: #666;
+        line-height: 1.6;
+    }
+}

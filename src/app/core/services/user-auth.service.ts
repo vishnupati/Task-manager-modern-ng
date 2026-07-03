@@ -9,7 +9,9 @@ import { AuthResponse, AuthUser, LoginPayload, SignupPayload, SsoProvider } from
 
 const TOKEN_STORAGE_KEY = 'tm_access_token';
 const USER_STORAGE_KEY = 'tm_user';
-
+interface MeResponse {
+    user: AuthUser;
+}
 @Injectable({ providedIn: 'root' })
 export class UserAuthService {
     private readonly http = inject(HttpClient);
@@ -69,9 +71,17 @@ export class UserAuthService {
         this.router.navigate([ '/login' ]);
     }
 
+    // getMe(): Observable<AuthUser> {
+    //     return this.http.get<AuthUser>(`${AUTH_API_URL}/me`, { withCredentials: true });
+    // }
+    
     getMe(): Observable<AuthUser> {
-        return this.http.get<AuthUser>(`${AUTH_API_URL}/me`, { withCredentials: true });
-    }
+    return this.http
+        .get<MeResponse>(`${AUTH_API_URL}/me`, {
+            withCredentials: true
+        })
+        .pipe(map(response => response.user));
+}
 
     initializeAuth(): Observable<void> {
         const token = this.token();
