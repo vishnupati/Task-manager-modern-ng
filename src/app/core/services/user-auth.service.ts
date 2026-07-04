@@ -74,14 +74,14 @@ export class UserAuthService {
     // getMe(): Observable<AuthUser> {
     //     return this.http.get<AuthUser>(`${AUTH_API_URL}/me`, { withCredentials: true });
     // }
-    
+
     getMe(): Observable<AuthUser> {
-    return this.http
-        .get<MeResponse>(`${AUTH_API_URL}/me`, {
-            withCredentials: true
-        })
-        .pipe(map(response => response.user));
-}
+        return this.http
+            .get<MeResponse>(`${AUTH_API_URL}/me`, {
+                withCredentials: true
+            })
+            .pipe(map(response => response.user));
+    }
 
     initializeAuth(): Observable<void> {
         const token = this.token();
@@ -189,11 +189,11 @@ export class UserAuthService {
         // }
     }
 
-    googleSignUpOrLogin(idToken: string, isSignup: boolean = false): Observable<void> {
-        return this.http.get<AuthResponse>(`${AUTH_API_URL}/sso/google`, {
-            params: { idToken },
-            withCredentials: true
-        }).pipe(
+    googleSignUpOrLogin(idToken: string): Observable<void> {
+        return this.http.post<AuthResponse>(`${AUTH_API_URL}/sso`, {
+            provider: 'google',
+            idToken
+        }, { withCredentials: true }).pipe(
             tap((response) => {
                 this.persistSession(response);
                 if (response.user) {

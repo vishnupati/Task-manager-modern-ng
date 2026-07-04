@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { email, form, FormField, minLength, required, submit } from '@angular/forms/signals';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -8,6 +8,23 @@ import { firstValueFrom } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
 import { GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../../../core/config/api.config';
+
+interface GoogleCredentialResponse {
+    credential?: string;
+    [ key: string ]: unknown;
+}
+
+interface GoogleIdentityServices {
+    accounts?: {
+        id?: {
+            initialize(options: {
+                client_id: string;
+                callback: (response: GoogleCredentialResponse) => void;
+            }): void;
+            prompt(): void;
+        };
+    };
+}
 
 interface SignupForm {
     name: string;
@@ -21,13 +38,14 @@ interface SignupForm {
     templateUrl: './signup-page.component.html',
     styleUrl: './signup-page.component.scss'
 })
-export class SignupPageComponent {
+export class SignupPageComponent implements OnInit {
     private readonly auth = inject(UserAuthService);
     private readonly notifications = inject(NotificationService);
     private readonly router = inject(Router);
 
     readonly isSubmitting = signal(false);
     readonly errorMessage = signal('');
+    private googleInitialized = false;
 
     readonly signupModel = signal<SignupForm>({
         name: '',
@@ -47,6 +65,10 @@ export class SignupPageComponent {
     readonly isFormValid = computed(() =>
         this.signupForm.name().valid() && this.signupForm.email().valid() && this.signupForm.password().valid()
     );
+
+    ngOnInit(): void {
+        this.initializeGoogleIdentity();
+    }
 
     onSubmit(event: Event): void {
         event.preventDefault();
@@ -80,75 +102,34 @@ export class SignupPageComponent {
     signupWithGithub() {
         window.location.href = 'https://github.com/login/oauth/authorize' +
             `?client_id=${GITHUB_CLIENT_ID}` +
-            `&redirect_uri=http://localhost:9000/api/auth/github/callback` +
+            `&redirect_uri=http://localhost:3000/api/auth/github/callback` +
             `&scope=user:email`;
     }
 
-    // private signupWithGoogle(): void {
-    //     this.isSubmitting.set(true);
-
-    //     if (!(window as any).google?.accounts?.oauth2) {
-    //         this.errorMessage.set('Google SDK not loaded');
-    //         this.isSubmitting.set(false);
-    //         return;
-    //     }
-
-    //     (window as any).google.accounts.oauth2.initTokenClient({
-    //         client_id: this.getGoogleClientId(),
-    //         scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-    //         callback: (response: any) => this.handleGoogleResponse(response),
-    //     }).requestAccessToken({ prompt: 'consent' });
-    // }
     private signupWithGoogle(): void {
         this.isSubmitting.set(true);
 
-        const google = (window as any).google;
+        const google = this.getGoogleIdentityServices();
 
-        if (!google?.accounts?.id) {
+        if (!this.googleInitialized || !google?.accounts?.id) {
             this.errorMessage.set('Google SDK not loaded');
             this.isSubmitting.set(false);
             return;
         }
 
-        google.accounts.id.initialize({
-            client_id: this.getGoogleClientId(),
-            callback: (response: any, error: Error) => this.handleGoogleResponse(response, error),
-        });
-
-        google.accounts.id.prompt(); // opens Google popup
+        google.accounts.id.prompt();
     }
 
-    // private handleGoogleResponse(response: any): void {
-    //     if (!response.access_token) {
-    //         this.errorMessage.set('Failed to get Google authorization');
-    //         this.isSubmitting.set(false);
-    //         return;
-    //     }
+    private handleGoogleResponse(response: GoogleCredentialResponse): void {
+        console.log('Google callback:', response);
 
-    //     this.auth.googleSignUpOrLogin(response.access_token, true).subscribe({
-    //         next: () => {
-    //             this.notifications.success('Account created successfully with Google.');
-    //             this.isSubmitting.set(false);
-    //             this.router.navigateByUrl('/tasks');
-    //         },
-    //         error: (error: HttpErrorResponse) => {
-    //             this.isSubmitting.set(false);
-    //             this.errorMessage.set(error.error?.message ?? 'Google sign-up failed. Please try again.');
-    //         }
-    //     });
-    // }
-
-    private handleGoogleResponse(response: any, error: Error): void {
-        if (error) {
-            this.errorMessage.set('Failed to get Google authorization');
+        if (!response?.credential) {
+            this.errorMessage.set('Google did not return an ID token.');
             this.isSubmitting.set(false);
             return;
         }
 
-        const idToken = response.credential;
-        console.log('Received Google ID token:', idToken);
-
-        this.auth.googleSignUpOrLogin(idToken, true).subscribe({
+        this.auth.googleSignUpOrLogin(response.credential).subscribe({
             next: () => {
                 this.notifications.success('Signup successful');
                 this.isSubmitting.set(false);
@@ -164,5 +145,29 @@ export class SignupPageComponent {
     private getGoogleClientId(): string {
         // return `${GOOGLE_CLIENT_ID}.apps.googleusercontent.com`;
         return `${GOOGLE_CLIENT_ID}`;
+    }
+
+    private initializeGoogleIdentity(): void {
+        if (this.googleInitialized) {
+            return;
+        }
+
+        const google = this.getGoogleIdentityServices();
+
+        if (!google?.accounts?.id) {
+            this.errorMessage.set('Google SDK not loaded');
+            return;
+        }
+
+        google.accounts.id.initialize({
+            client_id: this.getGoogleClientId(),
+            callback: (response: GoogleCredentialResponse) => this.handleGoogleResponse(response)
+        });
+
+        this.googleInitialized = true;
+    }
+
+    private getGoogleIdentityServices(): GoogleIdentityServices | undefined {
+        return (window as Window & { google?: GoogleIdentityServices }).google;
     }
 }
