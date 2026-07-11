@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
-import { GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../../../core/config/api.config';
+import { BACKEND_URL, GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../../../core/config/api.config';
 
 interface GoogleCredentialResponse {
     credential?: string;
@@ -102,7 +102,7 @@ export class SignupPageComponent implements OnInit {
     signupWithGithub() {
         window.location.href = 'https://github.com/login/oauth/authorize' +
             `?client_id=${GITHUB_CLIENT_ID}` +
-            `&redirect_uri=http://localhost:3000/api/auth/github/callback` +
+            `&redirect_uri=${BACKEND_URL}api/auth/github/callback` +
             `&scope=user:email`;
     }
 
