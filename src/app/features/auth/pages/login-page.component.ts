@@ -93,11 +93,11 @@ export class LoginPageComponent implements OnInit {
             this.auth.startSso(provider, this.route.snapshot.queryParamMap.get('redirectTo') ?? '/tasks');
         }
     }
-    
+
     signupWithGithub() {
         window.location.href = 'https://github.com/login/oauth/authorize' +
             `?client_id=${GITHUB_CLIENT_ID}` +
-            `&redirect_uri=${BACKEND_URL}api/auth/github/callback` +
+            `&redirect_uri=${BACKEND_URL}/api/auth/github/callback` +
             `&scope=user:email`;
     }
 

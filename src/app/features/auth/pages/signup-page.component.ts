@@ -102,7 +102,7 @@ export class SignupPageComponent implements OnInit {
     signupWithGithub() {
         window.location.href = 'https://github.com/login/oauth/authorize' +
             `?client_id=${GITHUB_CLIENT_ID}` +
-            `&redirect_uri=${BACKEND_URL}api/auth/github/callback` +
+            `&redirect_uri=${BACKEND_URL}/api/auth/github/callback` +
             `&scope=user:email`;
     }
 
