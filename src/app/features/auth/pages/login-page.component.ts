@@ -7,7 +7,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
-import { GOOGLE_CLIENT_ID } from '../../../core/config/api.config';
+import { BACKEND_URL, GITHUB_CLIENT_ID, GOOGLE_CLIENT_ID } from '../../../core/config/api.config';
 
 interface GoogleCredentialResponse {
     credential?: string;
@@ -86,10 +86,19 @@ export class LoginPageComponent implements OnInit {
     loginWithSso(provider: 'google' | 'github' | 'microsoft'): void {
         if (provider === 'google') {
             this.loginWithGoogle();
+        } else if (provider === 'github') {
+            this.signupWithGithub();
         } else {
             console.log(`Initiating SSO login with provider: ${provider}`);
             this.auth.startSso(provider, this.route.snapshot.queryParamMap.get('redirectTo') ?? '/tasks');
         }
+    }
+    
+    signupWithGithub() {
+        window.location.href = 'https://github.com/login/oauth/authorize' +
+            `?client_id=${GITHUB_CLIENT_ID}` +
+            `&redirect_uri=${BACKEND_URL}api/auth/github/callback` +
+            `&scope=user:email`;
     }
 
     private loginWithGoogle(): void {
