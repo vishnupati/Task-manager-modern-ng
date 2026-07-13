@@ -1,6 +1,5 @@
-import { computed, effect, inject, Injectable, linkedSignal, resource, signal } from '@angular/core';
-import { toSignal, rxResource } from '@angular/core/rxjs-interop';
-import { finalize, Subject, concatMap, switchMap, tap } from 'rxjs';
+import { computed, inject, Service, signal } from '@angular/core';
+import { concatMap, finalize, Subject, tap } from 'rxjs';
 
 import { mapCreateTaskFormToDto, mapUpdateTaskFormToDto } from '../mappers/task.mapper';
 import { Task, TaskFormValue } from '../models/task.model';
@@ -11,27 +10,14 @@ interface UpdateCommand {
     value: Partial<TaskFormValue>;
 }
 
-interface TaskStats {
-    total: number;
-    completed: number;
-    pending: number;
-}
-
-@Injectable({ providedIn: 'root' })
+@Service()
 export class TaskStoreService {
     private readonly api = inject(TaskApiService);
-
-    private readonly refreshNonce = signal(0);
-    private readonly reloadRequest$ = new Subject<void>();
     private readonly updateQueue$ = new Subject<UpdateCommand>();
 
-    readonly tasksResource = rxResource<Task[], number>({
-        params: () => this.refreshNonce(),
-        defaultValue: [],
-        stream: () => this.api.getTasks()
-    });
+    readonly tasksResource = this.api.getTasks();
 
-    readonly tasks = linkedSignal(() => this.tasksResource.value() ?? []);
+    readonly tasks = computed(() => this.tasksResource.value() ?? []);
     readonly selectedTaskId = signal<string | null>(null);
     readonly isSaving = signal(false);
 
@@ -44,42 +30,24 @@ export class TaskStoreService {
         return this.tasks().find((task) => task.id === selectedId) ?? null;
     });
 
-    readonly statsResource = resource<TaskStats, Task[]>({
-        params: () => this.tasks(),
-        defaultValue: { total: 0, completed: 0, pending: 0 },
-        loader: async ({ params }) => {
-            const completed = params.filter((task) => task.status === 'completed').length;
-            const total = params.length;
-            return {
-                total,
-                completed,
-                pending: total - completed
-            };
-        }
+    readonly stats = computed(() => {
+        const tasks = this.tasks();
+        const completed = tasks.filter((task) => task.status === 'completed').length;
+        const total = tasks.length;
+        return {
+            total,
+            completed,
+            pending: total - completed
+        };
     });
 
-    readonly tasksFromReloadSignal = toSignal(
-        this.reloadRequest$.pipe(
-            switchMap(() => this.api.getTasks()),
-            tap((tasks) => this.tasks.set(tasks))
-        ),
-        { initialValue: [] as Task[] }
-    );
-
     constructor() {
-        effect(() => {
-            const latest = this.tasksResource.value();
-            if (latest) {
-                this.tasks.set(latest);
-            }
-        });
-
         this.updateQueue$
             .pipe(
                 concatMap((command) =>
                     this.api.updateTask(command.id, mapUpdateTaskFormToDto(command.value)).pipe(
                         tap((updated) => {
-                            this.tasks.update((tasks) => tasks.map((task) => (task.id === updated.id ? updated : task)));
+                            this.tasksResource.update((tasks) => (tasks ?? []).map((task) => (task.id === updated.id ? updated : task)));
                         })
                     )
                 )
@@ -88,26 +56,14 @@ export class TaskStoreService {
     }
 
     refresh(): void {
-        this.refreshNonce.update((value) => value + 1);
-        this.reloadRequest$.next();
-    }
-
-    getTasks() {
-        console.log('TaskStoreService.getTasks() called');
-        const tasks$ = this.api.getTasks().pipe(
-            tap((tasks) => {
-                console.log('API returned tasks:', tasks);
-                this.tasks.set(tasks);
-            })
-        );
-        return tasks$;
+        this.tasksResource.reload();
     }
 
     createTask(formValue: TaskFormValue) {
         this.isSaving.set(true);
         return this.api.createTask(mapCreateTaskFormToDto(formValue)).pipe(
             tap((task) => {
-                this.tasks.update((tasks) => [ task, ...tasks ]);
+                this.tasksResource.update((tasks) => [ task, ...(tasks ?? []) ]);
             }),
             finalize(() => this.isSaving.set(false))
         );
@@ -120,7 +76,7 @@ export class TaskStoreService {
     deleteTask(id: string) {
         return this.api.deleteTask(id).pipe(
             tap(() => {
-                this.tasks.update((tasks) => tasks.filter((task) => task.id !== id));
+                this.tasksResource.update((tasks) => (tasks ?? []).filter((task) => task.id !== id));
             })
         );
     }

@@ -8,10 +8,8 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { resource } from '@angular/core';
 import { form, FormField, required, submit } from '@angular/forms/signals';
 import { HttpErrorResponse } from '@angular/common/http';
-import { firstValueFrom, map } from 'rxjs';
 
 import { Task, TaskFormValue } from '../../../core/models/task.model';
 import { TaskStatus } from '../../../core/models/task-status.type';
@@ -44,12 +42,8 @@ export class TaskFormComponent {
     const params = this.route.snapshot.params;
     return params['id'] || null;
   });
-  // readonly isCreateMode = computed(() => !this.taskId());
 
-  readonly taskResource = resource<Task | null, string>({
-    params: () => this.taskId() || null,
-    loader: async ({ params }) => (params ? await firstValueFrom(this.api.getTask(params)) : null),
-  });
+  readonly taskResource = this.api.getTask(() => this.taskId());
 
   readonly task = computed(() => this.taskResource.value() ?? null);
   readonly isLoading = computed(() => this.taskResource.isLoading());

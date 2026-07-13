@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, Observable, of, switchMap, tap } from 'rxjs';
 
@@ -12,7 +12,7 @@ const USER_STORAGE_KEY = 'tm_user';
 interface MeResponse {
     user: AuthUser;
 }
-@Injectable({ providedIn: 'root' })
+@Service()
 export class UserAuthService {
     private readonly http = inject(HttpClient);
     private readonly router = inject(Router);

@@ -8,10 +8,10 @@ import {
   output,
   signal,
   ChangeDetectionStrategy,
+  debounced,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged, of, startWith, Subject, switchMap } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { TaskStoreService } from '../../../core/services/task-store.service';
@@ -20,7 +20,6 @@ import { TaskListComponent } from '../components/task-list/task-list.component';
 import { SearchInputComponent } from '../../../shared/components/search-input/search-input.component';
 import { Task } from '../../../core/models/task.model';
 import { TaskFormValue } from '../../../core/models/task.model';
-import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-task-page',
@@ -34,9 +33,8 @@ export class TaskPageComponent {
   private readonly store = inject(TaskStoreService);
   private readonly notifications = inject(NotificationService);
   private readonly router = inject(Router);
-  private readonly searchInput$ = new Subject<string>();
 
-  readonly errorMessage = signal('');
+  readonly actionError = signal('');
   readonly currentPage = signal(1);
   readonly pageSize = signal(6);
 
@@ -50,23 +48,21 @@ export class TaskPageComponent {
   readonly panelClosed = output<void>();
 
   readonly tasks = this.store.tasks;
-  readonly stats = computed(
-    () => this.store.statsResource.value() ?? { total: 0, pending: 0, completed: 0 },
-  );
+  readonly stats = this.store.stats;
   readonly isLoading = computed(() => this.store.tasksResource.isLoading());
 
-  readonly query = toSignal(
-    this.searchInput$.pipe(
-      startWith(''),
-      debounceTime(400),
-      distinctUntilChanged(),
-      switchMap((value) => of(value.trim().toLowerCase())),
-    ),
-    { initialValue: '' },
-  );
+  readonly query = debounced(this.searchTerm, 400);
+
+  readonly errorMessage = computed(() => {
+    const resourceErr = this.store.tasksResource.error() as any;
+    if (resourceErr) {
+      return resourceErr.error?.message ?? resourceErr.message ?? 'Unable to load tasks. Please try again.';
+    }
+    return this.actionError();
+  });
 
   readonly filteredTasks = computed(() => {
-    const searchTerm = this.query();
+    const searchTerm = this.query.value()?.trim().toLowerCase();
     if (!searchTerm) {
       return this.tasks();
     }
@@ -93,13 +89,6 @@ export class TaskPageComponent {
   });
 
   constructor() {
-    // Load tasks immediately
-    this.loadTasks();
-
-    effect(() => {
-      this.store.tasksFromReloadSignal();
-    });
-
     effect(() => {
       const totalPages = this.totalPages();
       const page = this.currentPage();
@@ -109,24 +98,8 @@ export class TaskPageComponent {
     });
 
     effect(() => {
-      this.query();
+      this.query.value();
       this.currentPage.set(1);
-    });
-
-    effect(() => {
-      const term = this.searchTerm();
-      this.searchInput$.next(term);
-    });
-  }
-
-  private loadTasks(): void {
-    this.store.getTasks().subscribe({
-      next: (tasks) => {
-        this.errorMessage.set('');
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage.set(error.error?.message ?? 'Unable to load tasks. Please try again.');
-      },
     });
   }
 
@@ -138,12 +111,8 @@ export class TaskPageComponent {
     this.router.navigate(['/task', taskId]);
   }
 
-  onSearchChange(value: string): void {
-    this.searchInput$.next(value);
-  }
-
   onToggleStatus({ taskId, completed }: { taskId: string; completed: boolean }): void {
-    this.errorMessage.set('');
+    this.actionError.set('');
     this.store.queueTaskUpdate(taskId, { status: completed ? 'completed' : 'pending' });
     this.notifications.info('Task status updated.');
   }
@@ -153,13 +122,13 @@ export class TaskPageComponent {
   }
 
   onDeleteTask(taskId: string): void {
-    this.errorMessage.set('');
+    this.actionError.set('');
     this.store.deleteTask(taskId).subscribe({
       next: () => {
         this.notifications.success('Task deleted successfully.');
       },
       error: (error: HttpErrorResponse) => {
-        this.errorMessage.set(error.error?.message ?? 'Unable to delete task right now.');
+        this.actionError.set(error.error?.message ?? 'Unable to delete task right now.');
       },
     });
   }

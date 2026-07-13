@@ -1,0 +1,168 @@
+<main class="demo-shell">
+  <section class="demo-hero">
+    <p class="eyebrow">Angular v22 Showcase</p>
+    <h1>Modern Signal-First & Template Primitives</h1>
+    <p class="subtitle">Exploring native debouncing, HTTP resource updates, error isolation, and class provisioning.</p>
+  </section>
+
+  <!-- Navigation Tab Bar -->
+  <nav class="demo-navigation">
+    <button type="button" class="nav-tab" [class.active]="activeTab() === 'http'" (click)="switchTab('http')">
+      🌐 httpResource & Debounce
+    </button>
+    <button type="button" class="nav-tab" [class.active]="activeTab() === 'boundary'" (click)="switchTab('boundary')">
+      🛡️ Error Boundary
+    </button>
+    <button type="button" class="nav-tab" [class.active]="activeTab() === 'service'" (click)="switchTab('service')">
+      ⚙️ @Service Decorator
+    </button>
+  </nav>
+
+  <div class="demo-workspace">
+    <!-- Active Tab Demo Container using @switch -->
+    <section class="demo-panel">
+      @switch (activeTab()) {
+        @case ('http') {
+          <article class="demo-card">
+            <header>
+              <h2>🌐 Eager HTTP Resource with Signal Debouncing</h2>
+              <p>Type in the input below. The API request is automatically debounced by 500ms using the native <code>debounced()</code> signal primitive, preventing excessive server load.</p>
+            </header>
+
+            <div class="demo-input-group">
+              <label for="search-posts">Search Posts (JSONPlaceholder):</label>
+              <input
+                id="search-posts"
+                type="text"
+                placeholder="Type to filter e.g. 'qui', 'magnam'..."
+                [value]="searchTerm()"
+                (input)="onSearch($event)"
+              />
+              <div class="search-status">
+                <span>Value: <code>"{{ searchTerm() }}"</code></span> | 
+                <span>Debounced: <code>"{{ debouncedSearch.value() || '' }}"</code></span>
+              </div>
+            </div>
+
+            <div class="demo-results">
+              <h3>API Response Results</h3>
+              @if (postsResource.isLoading()) {
+                <div class="status-loading">Loading posts asynchronously...</div>
+              } @else if (postsResource.error()) {
+                <div class="status-error">Error fetching posts. Please verify internet connection.</div>
+              } @else {
+                <div class="posts-grid">
+                  @for (post of postsResource.value(); track post.id) {
+                    <div class="post-card">
+                      <h4>{{ post.title }}</h4>
+                      <p>{{ post.body }}</p>
+                      <small>Post ID: {{ post.id }}</small>
+                    </div>
+                  } @empty {
+                    <p class="status-empty">No posts returned from search filter.</p>
+                  }
+                </div>
+              }
+            </div>
+          </article>
+        }
+
+        @case ('boundary') {
+          <article class="demo-card">
+            <header>
+              <h2>🛡️ Template-Level Error Boundary (<code>@boundary</code>)</h2>
+              <p>Error boundaries contain runtime failures inside components during change detection so the rest of the application stays responsive instead of crashing the entire page.</p>
+            </header>
+
+            <div class="demo-controls">
+              <button 
+                type="button" 
+                [class.danger-active]="triggerError()" 
+                (click)="toggleError()"
+              >
+                {{ triggerError() ? 'Dismiss Crashed State' : 'Simulate Component Crash' }}
+              </button>
+            </div>
+
+            <!-- Showcase code for Error Boundary since it is an upcoming feature -->
+            <div class="service-code-showcase">
+              <pre><code>
+&#64;boundary &#123;
+  &lt;div class="risky-component"&gt;
+    &lt;p&gt;All processes running normally.&lt;/p&gt;
+  &lt;/div&gt;
+&#125; &#64;error (let err) &amp;#123;
+  &lt;div class="fallback-error-card"&gt;
+    &lt;h4&gt;🛡️ Error Boundary Triggered&lt;/h4&gt;
+    &lt;p&gt;{{ '{{' }} err.message {{ '}}' }}&lt;/p&gt;
+  &lt;/div&gt;
+&#125;
+              </code></pre>
+            </div>
+
+            <!-- Simulated Error Boundary UI -->
+            <div class="simulated-boundary">
+              <h3 style="margin-bottom: 0.75rem;">Simulated Error Boundary Preview:</h3>
+              @if (!triggerError()) {
+                <div class="component-banner success">
+                  <h4>Component Status: Operational</h4>
+                  <p>{{ riskyValue() }}</p>
+                </div>
+              } @else {
+                <div class="component-banner error">
+                  <h4>🛡️ Isolated Application Crash (Simulated &#64;error block)</h4>
+                  <p class="error-msg"><strong>Error Message:</strong> Component crashed: Change detection triggered an error in the template.</p>
+                  <p class="explanation">The component crashed! However, because of the simulated <code>&#64;boundary</code>, the crash was isolated here. You can still use the tab navigation above and the log console below.</p>
+                  <button type="button" class="action-btn" (click)="toggleError()">Recover Component</button>
+                </div>
+              }
+            </div>
+          </article>
+        }
+
+        @case ('service') {
+          <article class="demo-card">
+            <header>
+              <h2>⚙️ Modern Root Provisioning with <code>@Service()</code></h2>
+              <p>The new decorator simplifies dependency injection by automatically declaring classes as application-level singletons (<code>providedIn: 'root'</code>) while streamlining usage of the functional <code>inject()</code> pattern.</p>
+            </header>
+
+            <div class="service-code-showcase">
+              <pre><code>
+@Service()
+export class MockDemoLogService &#123;
+  private logs = signal&lt;string[]&gt;([]);
+
+  getLogs() &#123;
+    return this.logs.asReadonly();
+  &#125;
+&#125;
+              </code></pre>
+            </div>
+
+            <p class="success-banner">
+              <strong>Status:</strong> Successfully using <code>@Service()</code> decorator on <code>MockDemoLogService</code>, <code>TaskApiService</code>, and <code>TaskStoreService</code>.
+            </p>
+          </article>
+        }
+      }
+    </section>
+
+    <!-- Side Panel: Interactive Activity Log Console -->
+    <aside class="demo-sidebar">
+      <div class="console-card">
+        <header>
+          <h3>Console Output Log</h3>
+          <button type="button" class="clear-btn" (click)="clearLogs()">Clear</button>
+        </header>
+        <div class="console-body">
+          @for (log of logs(); track log) {
+            <div class="console-line">{{ log }}</div>
+          } @empty {
+            <div class="console-empty">No activity logs recorded.</div>
+          }
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
