@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { SwUpdateService } from './core/services/sw-update.service';
@@ -8,9 +8,10 @@ import { ToastContainerComponent } from './shared/components/toast-container/toa
 
 @Component({
   selector: 'app-root',
-  imports: [ RouterOutlet, ToastContainerComponent, AppHeaderComponent, AppFooterComponent ],
+  imports: [RouterOutlet, ToastContainerComponent, AppHeaderComponent, AppFooterComponent],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrl: './app.scss',
 })
 export class App {
   private readonly swUpdates = inject(SwUpdateService);

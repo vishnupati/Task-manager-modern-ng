@@ -1,6 +1,12 @@
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, inject, isDevMode, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideClientHydration } from '@angular/platform-browser';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+import {
+  ApplicationConfig,
+  inject,
+  isDevMode,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
+import { provideClientHydration, withNoIncrementalHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -13,16 +19,16 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideClientHydration(),
-    provideHttpClient(withInterceptors([ authInterceptor, httpErrorInterceptor ])),
+    provideClientHydration(withNoIncrementalHydration()),
+    provideHttpClient(withXhr(), withInterceptors([authInterceptor, httpErrorInterceptor])),
     provideRouter(routes),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      registrationStrategy: 'registerWhenStable:30000',
     }),
     provideAppInitializer(() => {
       const authService = inject(UserAuthService);
       return firstValueFrom(authService.initializeAuth());
-    })
-  ]
+    }),
+  ],
 };

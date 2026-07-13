@@ -1,38 +1,46 @@
 <header class="app-header">
-    <a class="brand" routerLink="/tasks">
-        <span class="brand-mark">TM</span>
-        <span>Task Manager</span>
-    </a>
+  <a class="brand" routerLink="/tasks">
+    <span class="brand-mark">TM</span>
+    <span>Task Manager</span>
+  </a>
 
-    <nav class="main-nav">
-        @if (isAuthenticated()) {
-        <a routerLink="/tasks" routerLinkActive="active">Tasks</a>
-        }
-        <a routerLink="/angular-apis-demo" routerLinkActive="active">Angular APIs</a>
-    </nav>
+  <nav class="main-nav">
+    @if (isAuthenticated()) {
+      <a routerLink="/tasks" routerLinkActive="active">Tasks</a>
+    }
+    <a routerLink="/angular-apis-demo" routerLinkActive="active">Angular APIs</a>
+  </nav>
 
-    <div class="header-actions">
-        @if (!isAuthenticated()) {
-        <a class="nav-btn" routerLink="/login">Sign in</a>
-        <a class="nav-btn primary" routerLink="/signup">Sign up</a>
+  <div class="header-actions">
+    @if (!isAuthenticated()) {
+      <a class="nav-btn" routerLink="/login">Sign in</a>
+      <a class="nav-btn primary" routerLink="/signup">Sign up</a>
+    } @else {
+      <button
+        type="button"
+        class="avatar-trigger"
+        (click)="toggleMenu()"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="isMenuOpen()"
+      >
+        @if (user()?.avatarUrl) {
+          <img
+            [src]="$safeNavigationMigration(user()?.avatarUrl)"
+            [alt]="$safeNavigationMigration(user()?.name) + ' avatar'"
+          />
         } @else {
-        <button type="button" class="avatar-trigger" (click)="toggleMenu()" aria-haspopup="menu"
-            [attr.aria-expanded]="isMenuOpen()">
-            @if (user()?.avatarUrl) {
-            <img [src]="user()?.avatarUrl" [alt]="user()?.name + ' avatar'" />
-            } @else {
-            <span>{{ initials() }}</span>
-            }
-        </button>
+          <span>{{ initials() }}</span>
+        }
+      </button>
 
-        @if (isMenuOpen()) {
+      @if (isMenuOpen()) {
         <section class="user-menu" role="menu">
-            <p class="name">{{ user()?.name }}</p>
-            <p class="email">{{ user()?.email }}</p>
-            <a routerLink="/settings" (click)="isMenuOpen.set(false)">User settings</a>
-            <button type="button" (click)="logout()">Log out</button>
+          <p class="name">{{ user()?.name }}</p>
+          <p class="email">{{ user()?.email }}</p>
+          <a routerLink="/settings" (click)="isMenuOpen.set(false)">User settings</a>
+          <button type="button" (click)="logout()">Log out</button>
         </section>
-        }
-        }
-    </div>
+      }
+    }
+  </div>
 </header>
