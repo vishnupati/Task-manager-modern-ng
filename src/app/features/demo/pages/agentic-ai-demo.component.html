@@ -1,0 +1,92 @@
+<main class="demo-shell">
+  <section class="demo-hero">
+    <p class="eyebrow">Agentic AI & WebMCP</p>
+    <h1>Web Model Context Protocol Integration</h1>
+    <p class="subtitle">Exposing structured client-side tools directly to AI browser models using <code>@mcp-b/webmcp-polyfill</code>.</p>
+  </section>
+
+  <div class="demo-workspace">
+    <div class="demo-main-column">
+      <!-- Overview Card -->
+      <article class="demo-card highlight-card">
+        <h3>What is WebMCP?</h3>
+        <p>WebMCP is a W3C extension of the standard Model Context Protocol. It allows this web application to register JavaScript functions as tools in the browser. When an AI agent visits this page, it can query and run these tools directly—enabling it to read, create, and manage tasks natively in the client-side state without web scraping.</p>
+      </article>
+
+      <!-- Registered Tools List -->
+      <section class="tools-section">
+        <h2>🛡️ Registered Agentic Tools</h2>
+        <p class="section-desc">These functions are exposed to the AI model using <code>navigator.modelContext.registerTool()</code>.</p>
+        
+        <div class="tools-grid">
+          @for (tool of registeredTools(); track tool.name) {
+            <article class="tool-card">
+              <header>
+                <span class="tool-badge">Tool</span>
+                <h3><code>{{ tool.name }}</code></h3>
+              </header>
+              <p class="tool-desc">{{ tool.description }}</p>
+              <div class="tool-schema">
+                <strong>Input Parameters:</strong>
+                <pre><code>{{ tool.inputSchema | json }}</code></pre>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+
+      <!-- AI Agent Simulator -->
+      <section class="simulator-section">
+        <h2>🤖 Simulate AI Agent Actions</h2>
+        <p class="section-desc">Type a natural language instruction to simulate how an AI agent uses WebMCP tools to read or update the task store.</p>
+        
+        <div class="simulator-card">
+          <div class="quick-prompts">
+            <button type="button" (click)="runSimulatedAgent('List all current tasks')">📋 "List tasks"</button>
+            <button type="button" (click)="runSimulatedAgent('Create a new task to write documentation')">➕ "Create task: Write documentation"</button>
+            <button type="button" (click)="runSimulatedAgent('Delete the first task')">❌ "Delete first task"</button>
+          </div>
+
+          <div class="prompt-input-group">
+            <input 
+              type="text" 
+              placeholder="e.g. 'Add a task to buy groceries'..." 
+              [value]="inputPrompt()"
+              (input)="onPromptChange($event)"
+              (keydown.enter)="runSimulatedAgent(inputPrompt())"
+              [disabled]="isAgentRunning()"
+            />
+            <button 
+              type="button" 
+              (click)="runSimulatedAgent(inputPrompt())"
+              [disabled]="isAgentRunning() || !inputPrompt().trim()"
+            >
+              @if (isAgentRunning()) {
+                <span>Processing...</span>
+              } @else {
+                <span>Run Agent Command</span>
+              }
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Live Console Output logs -->
+    <aside class="demo-sidebar">
+      <div class="console-card">
+        <header>
+          <h3>Activity & Polyfill Logs</h3>
+          <button type="button" class="clear-btn" (click)="clearLogs()">Clear</button>
+        </header>
+        <div class="console-body">
+          @for (log of consoleLogs(); track log) {
+            <div class="console-line">{{ log }}</div>
+          } @empty {
+            <div class="console-empty">No log history.</div>
+          }
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
