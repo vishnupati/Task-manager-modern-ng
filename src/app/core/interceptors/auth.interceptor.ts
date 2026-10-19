@@ -1,25 +1,21 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 
+import { API_BASE_URL } from '../config/api.config';
 import { UserAuthService } from '../services/user-auth.service';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
-    const auth = inject(UserAuthService);
-    const token = auth.token();
+    const token = inject(UserAuthService).token();
 
-    console.log('Auth interceptor - Request URL:', request.url, 'Token present:', !!token);
-
-    if (!token || request.url.includes('/me')) {
-        console.log('Skipping auth header for request:', request.url);
+    // Never send the token to third-party hosts. It is sent on every API call (including /me)
+    // because cross-site auth cookies are blocked by Safari/Firefox and can't be relied on.
+    if (!token || !request.url.startsWith(API_BASE_URL)) {
         return next(request);
     }
 
-    console.log('Adding auth header to request:', request.url);
-    const authorizedRequest = request.clone({
+    return next(request.clone({
         setHeaders: {
             Authorization: `Bearer ${token}`
         }
-    });
-
-    return next(authorizedRequest);
+    }));
 };

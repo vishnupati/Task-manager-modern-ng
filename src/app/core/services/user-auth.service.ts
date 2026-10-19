@@ -30,25 +30,15 @@ export class UserAuthService {
     readonly isAuthenticated = computed(() => Boolean(this.token() && this.user()));
 
     signup(payload: SignupPayload): Observable<void> {
-        return this.http.post<{ token: string }>(`${AUTH_API_URL}/signup`, payload, { withCredentials: true }).pipe(
-            tap((response) => this.persistSession(response)),
-            switchMap(() => this.getMe()),
-            tap(user => {
-                this.user.set(user);
-            }),
-            map(() => void 0)
-        );
+        return this.http
+            .post<AuthResponse>(`${AUTH_API_URL}/signup`, payload, { withCredentials: true })
+            .pipe(switchMap((response) => this.startSession(response)));
     }
 
     login(payload: LoginPayload): Observable<void> {
-        return this.http.post<{ token: string }>(`${AUTH_API_URL}/login`, payload, { withCredentials: true }).pipe(
-            tap((response) => this.persistSession(response)),
-            switchMap(() => this.getMe()),
-            tap(user => {
-                this.user.set(user);
-            }),
-            map(() => void 0)
-        );
+        return this.http
+            .post<AuthResponse>(`${AUTH_API_URL}/login`, payload, { withCredentials: true })
+            .pipe(switchMap((response) => this.startSession(response)));
     }
 
     logout(): Observable<void> {
@@ -84,27 +74,21 @@ export class UserAuthService {
     }
 
     initializeAuth(): Observable<void> {
-        const token = this.token();
-        console.log('Initializing auth, found token:', token);
-        if (token) {
-            console.log('Token exists, fetching user from /me API');
-            return this.getMe().pipe(
-                tap(user => {
-                    this.user.set(user);
-                    // this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-                    console.log('User fetched from /me and cached:', user);
-                }),
-                map(() => void 0),
-                catchError(err => {
-                    console.error('Failed to fetch user from /me:', err);
-                    console.log('Token is invalid or expired, clearing session');
-                    this.clearSession();
-                    return of(void 0);
-                })
-            );
+        if (!this.token()) {
+            return of(void 0);
         }
-        console.log('No token found, skipping auth initialization');
-        return of(void 0);
+
+        const cachedUser = this.restoreUser();
+        if (cachedUser) {
+            // Render immediately from the cached session and revalidate in the background. An
+            // expired token answers 401, which httpErrorInterceptor turns into a redirect to login.
+            this.user.set(cachedUser);
+            this.refreshUser().subscribe();
+            return of(void 0);
+        }
+
+        // No cached profile (e.g. first load after an upgrade): resolve it before the first navigation.
+        return this.refreshUser();
     }
 
     updateLocalProfile(patch: Partial<Pick<AuthUser, 'name' | 'avatarUrl'>>): void {
@@ -113,13 +97,10 @@ export class UserAuthService {
             return;
         }
 
-        const nextUser: AuthUser = {
+        this.setUser({
             ...user,
             ...patch
-        };
-
-        this.user.set(nextUser);
-        this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(nextUser));
+        });
     }
 
     startSso(provider: SsoProvider, redirectTo?: string): void {
@@ -179,14 +160,39 @@ export class UserAuthService {
 
     private persistSession(payload: { token: string; user?: AuthUser }): void {
         this.token.set(payload.token);
-        if (payload.user) {
-            this.user.set(payload.user);
-        }
-
         this.storage.setItem(TOKEN_STORAGE_KEY, payload.token);
-        // if (payload.user) {
-        //     this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(payload.user));
-        // }
+
+        if (payload.user) {
+            this.setUser(payload.user);
+        }
+    }
+
+    // Auth responses already carry the user, which saves a /me round trip before navigating.
+    private startSession(response: AuthResponse): Observable<void> {
+        this.persistSession(response);
+        return response.user ? of(void 0) : this.refreshUser();
+    }
+
+    private refreshUser(): Observable<void> {
+        const token = this.token();
+
+        return this.getMe().pipe(
+            tap((user) => {
+                // Ignore a late answer for a session that was replaced (logout / login as someone else).
+                if (this.token() === token) {
+                    this.setUser(user);
+                }
+            }),
+            map(() => void 0),
+            // A 401 already cleared the session via httpErrorInterceptor. Other failures (backend
+            // waking up, offline) keep the session instead of logging the user out.
+            catchError(() => of(void 0))
+        );
+    }
+
+    private setUser(user: AuthUser): void {
+        this.user.set(user);
+        this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
     }
 
     googleSignUpOrLogin(idToken: string): Observable<void> {
@@ -194,14 +200,7 @@ export class UserAuthService {
             provider: 'google',
             idToken
         }, { withCredentials: true }).pipe(
-            tap((response) => {
-                this.persistSession(response);
-                if (response.user) {
-                    this.user.set(response.user);
-                    this.storage.setItem(USER_STORAGE_KEY, JSON.stringify(response.user));
-                }
-            }),
-            map(() => void 0)
+            switchMap((response) => this.startSession(response))
         );
     }
 
@@ -210,13 +209,11 @@ export class UserAuthService {
         this.user.set(null);
 
         this.storage.removeItem(TOKEN_STORAGE_KEY);
-        // this.storage.removeItem(USER_STORAGE_KEY);
+        this.storage.removeItem(USER_STORAGE_KEY);
     }
 
     private restoreToken(): string | null {
-        const token = this.storage.getItem(TOKEN_STORAGE_KEY);
-        console.log('Restoring token from localStorage:', token);
-        return token;
+        return this.storage.getItem(TOKEN_STORAGE_KEY);
     }
 
     private restoreUser(): AuthUser | null {
@@ -226,7 +223,10 @@ export class UserAuthService {
         }
 
         try {
-            return JSON.parse(raw) as AuthUser;
+            const user = JSON.parse(raw) as Partial<AuthUser> | null;
+            return typeof user?.id === 'string' && typeof user.name === 'string' && typeof user.email === 'string'
+                ? (user as AuthUser)
+                : null;
         } catch {
             return null;
         }

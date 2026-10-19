@@ -1,11 +1,8 @@
-import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
-  effect,
   inject,
-  model,
-  output,
+  linkedSignal,
   signal,
   ChangeDetectionStrategy,
   debounced,
@@ -15,18 +12,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { NotificationService } from '../../../core/services/notification.service';
 import { TaskStoreService } from '../../../core/services/task-store.service';
-import { TaskFormComponent } from '../components/task-form.component';
 import { TaskListComponent } from '../components/task-list/task-list.component';
 import { SearchInputComponent } from '../../../shared/components/search-input/search-input.component';
-import { Task } from '../../../core/models/task.model';
-import { TaskFormValue } from '../../../core/models/task.model';
 
 @Component({
   selector: 'app-task-page',
-  standalone: true,
-  imports: [CommonModule, TaskFormComponent, TaskListComponent, SearchInputComponent],
+  imports: [TaskListComponent, SearchInputComponent],
   templateUrl: './task-page.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './task-page.component.scss',
 })
 export class TaskPageComponent {
@@ -35,28 +28,21 @@ export class TaskPageComponent {
   private readonly router = inject(Router);
 
   readonly actionError = signal('');
-  readonly currentPage = signal(1);
   readonly pageSize = signal(6);
-
-  // Model signals for two-way data binding
-  readonly isPanelOpen = model(false);
-  readonly selectedTask = model<Task | null>(null);
-  readonly searchTerm = model<string>('');
-
-  // Output signals for child to parent communication
-  readonly taskSaved = output<Task>();
-  readonly panelClosed = output<void>();
+  readonly searchTerm = signal('');
 
   readonly tasks = this.store.tasks;
   readonly stats = this.store.stats;
-  readonly isLoading = computed(() => this.store.tasksResource.isLoading());
+  // Only the first load replaces the list; reloads keep showing the tasks already on screen.
+  readonly isLoading = computed(() => this.store.tasksResource.status() === 'loading');
 
   readonly query = debounced(this.searchTerm, 400);
 
   readonly errorMessage = computed(() => {
-    const resourceErr = this.store.tasksResource.error() as any;
-    if (resourceErr) {
-      return resourceErr.error?.message ?? resourceErr.message ?? 'Unable to load tasks. Please try again.';
+    const error = this.store.tasksResource.error();
+    if (error) {
+      const serverMessage = error instanceof HttpErrorResponse ? error.error?.message : undefined;
+      return serverMessage ?? 'Unable to load tasks. Please try again.';
     }
     return this.actionError();
   });
@@ -81,27 +67,20 @@ export class TaskPageComponent {
     return Math.max(1, Math.ceil(totalItems / size));
   });
 
-  readonly paginatedTasks = computed(() => {
-    const page = this.currentPage();
-    const size = this.pageSize();
-    const start = (page - 1) * size;
-    return this.filteredTasks().slice(start, start + size);
+  // Back to the first page whenever the search query changes.
+  private readonly requestedPage = linkedSignal({
+    source: () => this.query.value(),
+    computation: () => 1,
   });
 
-  constructor() {
-    effect(() => {
-      const totalPages = this.totalPages();
-      const page = this.currentPage();
-      if (page > totalPages) {
-        this.currentPage.set(totalPages);
-      }
-    });
+  // Clamped, so deleting the last task of the last page doesn't leave an empty page.
+  readonly currentPage = computed(() => Math.min(this.requestedPage(), this.totalPages()));
 
-    effect(() => {
-      this.query.value();
-      this.currentPage.set(1);
-    });
-  }
+  readonly paginatedTasks = computed(() => {
+    const size = this.pageSize();
+    const start = (this.currentPage() - 1) * size;
+    return this.filteredTasks().slice(start, start + size);
+  });
 
   openCreate(): void {
     this.router.navigate(['/task/new']);
@@ -134,37 +113,10 @@ export class TaskPageComponent {
   }
 
   goToPreviousPage(): void {
-    this.currentPage.update((value) => Math.max(1, value - 1));
+    this.requestedPage.set(Math.max(1, this.currentPage() - 1));
   }
 
   goToNextPage(): void {
-    const pages = this.totalPages();
-    this.currentPage.update((value) => Math.min(pages, value + 1));
-  }
-
-  onTaskSaved(formValue: TaskFormValue): void {
-    const selectedTask = this.selectedTask();
-
-    if (selectedTask) {
-      this.store.queueTaskUpdate(selectedTask.id, formValue);
-      this.notifications.success('Task updated successfully.');
-    } else {
-      this.store.createTask(formValue).subscribe({
-        next: () => {
-          this.notifications.success('Task created successfully.');
-        },
-        error: (error: HttpErrorResponse) => {
-          this.notifications.error(error.error?.message ?? 'Unable to create task right now.');
-        },
-      });
-    }
-
-    this.closePanel();
-  }
-
-  closePanel(): void {
-    this.isPanelOpen.set(false);
-    this.selectedTask.set(null);
-    this.panelClosed.emit();
+    this.requestedPage.set(Math.min(this.totalPages(), this.currentPage() + 1));
   }
 }

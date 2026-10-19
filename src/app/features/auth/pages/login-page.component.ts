@@ -42,7 +42,7 @@ interface LoginForm {
   selector: 'app-login-page',
   imports: [CommonModule, FormField, RouterLink],
   templateUrl: './login-page.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './login-page.component.scss',
 })
 export class LoginPageComponent implements OnInit {
@@ -113,28 +113,25 @@ export class LoginPageComponent implements OnInit {
   }
 
   private loginWithGoogle(): void {
-    this.isSubmitting.set(true);
-
     const google = this.getGoogleIdentityServices();
 
-    if (!this.googleInitialized || !google?.accounts?.id) {
+    if (!this.initializeGoogleIdentity() || !google?.accounts?.id) {
       this.errorMessage.set('Google SDK not loaded');
-      this.isSubmitting.set(false);
       return;
     }
 
+    // Not marked as submitting yet: the prompt can be dismissed without ever calling back.
+    this.errorMessage.set('');
     google.accounts.id.prompt();
   }
 
   private handleGoogleResponse(response: GoogleCredentialResponse): void {
-    console.log('Google callback:', response);
-
     if (!response?.credential) {
       this.errorMessage.set('Google did not return an ID token.');
-      this.isSubmitting.set(false);
       return;
     }
 
+    this.isSubmitting.set(true);
     this.auth.googleSignUpOrLogin(response.credential).subscribe({
       next: () => {
         this.notifications.success('Welcome back.');
@@ -152,16 +149,16 @@ export class LoginPageComponent implements OnInit {
     return GOOGLE_CLIENT_ID;
   }
 
-  private initializeGoogleIdentity(): void {
+  // The GSI script loads async and may not be ready on init; it is retried on click.
+  private initializeGoogleIdentity(): boolean {
     if (this.googleInitialized) {
-      return;
+      return true;
     }
 
     const google = this.getGoogleIdentityServices();
 
     if (!google?.accounts?.id) {
-      this.errorMessage.set('Google SDK not loaded');
-      return;
+      return false;
     }
 
     google.accounts.id.initialize({
@@ -170,6 +167,7 @@ export class LoginPageComponent implements OnInit {
     });
 
     this.googleInitialized = true;
+    return true;
   }
 
   private getGoogleIdentityServices(): GoogleIdentityServices | undefined {
