@@ -1,10 +1,22 @@
+// Routed page (/task/new, /task/:id): a centered card that takes the full width on phones.
+:host {
+    display: block;
+    padding: clamp(1rem, 4vw, 2rem) clamp(0.75rem, 4vw, 1.4rem);
+}
+
 .task-form {
+    width: min(640px, 100%);
+    margin: 0 auto;
     display: grid;
     gap: 1rem;
+    border: 1px solid #d8e0ec;
+    border-radius: 1.2rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    background: rgba(255, 255, 255, 0.9);
 
     header h2 {
         margin: 0;
-        font-size: 1.3rem;
+        font-size: clamp(1.2rem, 3vw, 1.5rem);
     }
 
     header p {
@@ -62,13 +74,15 @@
 
     footer {
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
         gap: 0.6rem;
 
         button {
+            min-height: 2.75rem;
             border: none;
             border-radius: 999px;
-            padding: 0.58rem 1rem;
+            padding: 0.58rem 1.2rem;
             cursor: pointer;
             font-weight: 600;
         }
@@ -87,5 +101,12 @@
                 cursor: not-allowed;
             }
         }
+    }
+}
+
+// Phones: the actions share the row, and wrap to full width when they don't fit side by side.
+@media (max-width: 680px) {
+    .task-form footer button {
+        flex: 1 1 auto;
     }
 }
