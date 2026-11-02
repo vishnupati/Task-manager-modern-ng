@@ -1,9 +1,9 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SwUpdate, VersionReadyEvent, VersionEvent } from '@angular/service-worker';
 
 import { NotificationService } from './notification.service';
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class SwUpdateService {
     private readonly swUpdate = inject(SwUpdate);
     private readonly notifications = inject(NotificationService);

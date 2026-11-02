@@ -19,7 +19,7 @@ import { FormsModule } from '@angular/forms';
       class="search-input"
     />
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .search-input {

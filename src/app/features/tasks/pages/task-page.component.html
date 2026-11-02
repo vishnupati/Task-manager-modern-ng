@@ -36,14 +36,13 @@
     } @else {
     <app-task-list [tasks]="paginatedTasks()" (toggleStatus)="onToggleStatus($event)" (editTask)="onEditTask($event)"
         (deleteTask)="onDeleteTask($event)" />
-    }
 
-    <!-- @if (isPanelOpen()) {
-    <section class="panel-overlay" (click)="closePanel()">
-        <div class="panel" (click)="$event.stopPropagation()">
-            <app-task-form [task]="selectedTask()" [isBusy]="isSaving()" (formSubmitted)="saveTask($event)"
-                (cancelled)="closePanel()" />
-        </div>
-    </section>
-    } -->
+    @if (totalPages() > 1) {
+    <nav class="pager" aria-label="Task pages">
+        <button type="button" (click)="goToPreviousPage()" [disabled]="currentPage() === 1">Previous</button>
+        <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button type="button" (click)="goToNextPage()" [disabled]="currentPage() === totalPages()">Next</button>
+    </nav>
+    }
+    }
 </main>

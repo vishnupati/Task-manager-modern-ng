@@ -16,7 +16,7 @@ import { UserAuthService } from '../../../core/services/user-auth.service';
   imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './app-header.component.html',
   styleUrl: './app-header.component.scss',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '(document:click)': 'handleDocumentClick($event)',
   },

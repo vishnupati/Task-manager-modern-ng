@@ -3,6 +3,9 @@
         <header>
             <h2>{{ isEditMode() ? 'Edit task' : 'Add new task' }}</h2>
             <p>Capture what matters and keep delivery visible.</p>
+            @if (isTaskPending()) {
+            <p role="status">{{ taskResource.error() ? 'We could not load this task.' : 'Loading task...' }}</p>
+            }
         </header>
 
         <label>
@@ -34,7 +37,7 @@
 
         <footer>
             <button type="button" class="ghost" (click)="cancel()">Cancel</button>
-            <button type="submit" class="primary" [disabled]="isBusy() || !isFormValid()">
+            <button type="submit" class="primary" [disabled]="isBusy() || isTaskPending() || !isFormValid()">
                 {{ isBusy() ? 'Saving...' : isEditMode() ? 'Save changes' : 'Create task' }}
             </button>
         </footer>
