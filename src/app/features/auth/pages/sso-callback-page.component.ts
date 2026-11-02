@@ -7,7 +7,7 @@ import { UserAuthService } from '../../../core/services/user-auth.service';
 @Component({
   selector: 'app-sso-callback-page',
   templateUrl: './sso-callback-page.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './sso-callback-page.component.scss',
 })
 export class SsoCallbackPageComponent {

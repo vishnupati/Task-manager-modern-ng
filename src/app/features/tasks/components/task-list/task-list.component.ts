@@ -46,7 +46,7 @@ import { Task } from '../../../../core/models/task.model';
       </section>
     }
   `,
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .state {

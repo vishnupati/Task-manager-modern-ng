@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
-  effect,
   inject,
+  linkedSignal,
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { form, FormField, minLength, required, submit } from '@angular/forms/signals';
 
+import { AuthUser } from '../../../core/models/auth-user.model';
 import { NotificationService } from '../../../core/services/notification.service';
 import { UserAuthService } from '../../../core/services/user-auth.service';
 
@@ -21,7 +22,7 @@ interface SettingsForm {
   selector: 'app-user-settings-page',
   imports: [CommonModule, FormField],
   templateUrl: './user-settings-page.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './user-settings-page.component.scss',
 })
 export class UserSettingsPageComponent {
@@ -31,9 +32,14 @@ export class UserSettingsPageComponent {
   readonly currentUser = this.auth.user;
   readonly isSaving = signal(false);
 
-  readonly settingsModel = signal<SettingsForm>({
-    name: '',
-    email: '',
+  // Re-seeded only when a different user signs in, so the background /me refresh can't
+  // overwrite what is being typed.
+  readonly settingsModel = linkedSignal<AuthUser | null, SettingsForm>({
+    source: this.currentUser,
+    computation: (user, previous) =>
+      previous && previous.source?.id === user?.id
+        ? previous.value
+        : { name: user?.name ?? '', email: user?.email ?? '' },
   });
 
   readonly settingsForm = form(this.settingsModel, (p) => {
@@ -47,21 +53,6 @@ export class UserSettingsPageComponent {
   );
 
   readonly canSave = computed(() => this.settingsForm().valid() && !this.isSaving());
-
-  constructor() {
-    effect(() => {
-      const user = this.currentUser();
-      if (!user) {
-        this.settingsModel.set({ name: '', email: '' });
-        return;
-      }
-
-      this.settingsModel.set({
-        name: user.name,
-        email: user.email,
-      });
-    });
-  }
 
   onSave(event: Event): void {
     event.preventDefault();

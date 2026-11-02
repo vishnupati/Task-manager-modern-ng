@@ -55,6 +55,16 @@ export const routes: Routes = [
             import('./features/demo/pages/component-decorator-demo.component').then((m) => m.ComponentDecoratorDemoComponent)
     },
     {
+        path: 'angular22-demo',
+        loadComponent: () =>
+            import('./features/demo/pages/angular22-demo.component').then((m) => m.Angular22DemoComponent)
+    },
+    {
+        path: 'agentic-ai',
+        loadComponent: () =>
+            import('./features/demo/pages/agentic-ai-demo.component').then((m) => m.AgenticAiDemoComponent)
+    },
+    {
         path: '**',
         redirectTo: 'tasks'
     }

@@ -1,16 +1,14 @@
-import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
-  effect,
   inject,
+  linkedSignal,
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { resource } from '@angular/core';
 import { form, FormField, required, submit } from '@angular/forms/signals';
-import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, map } from 'rxjs';
 
 import { Task, TaskFormValue } from '../../../core/models/task.model';
@@ -25,12 +23,17 @@ interface TaskForm {
   status: TaskStatus;
 }
 
+const toFormModel = (task: Task | null): TaskForm => ({
+  title: task?.title ?? '',
+  description: task?.description ?? '',
+  status: task?.status ?? 'pending',
+});
+
 @Component({
   selector: 'app-task-form',
-  standalone: true,
-  imports: [CommonModule, FormField],
+  imports: [FormField],
   templateUrl: './task-form.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './task-form.component.scss',
 })
 export class TaskFormComponent {
@@ -40,81 +43,72 @@ export class TaskFormComponent {
   private readonly store = inject(TaskStoreService);
   private readonly notifications = inject(NotificationService);
 
-  readonly taskId = computed(() => {
-    const params = this.route.snapshot.params;
-    return params['id'] || null;
-  });
-  // readonly isCreateMode = computed(() => !this.taskId());
-
-  readonly taskResource = resource<Task | null, string>({
-    params: () => this.taskId() || null,
-    loader: async ({ params }) => (params ? await firstValueFrom(this.api.getTask(params)) : null),
+  readonly taskId = toSignal(this.route.paramMap.pipe(map((params) => params.get('id'))), {
+    requireSync: true,
   });
 
-  readonly task = computed(() => this.taskResource.value() ?? null);
-  readonly isLoading = computed(() => this.taskResource.isLoading());
-  readonly error = computed(() => this.taskResource.error());
+  // The task from the already-loaded list, so the edit form renders without waiting on a request.
+  private readonly cachedTask = computed(() => {
+    const id = this.taskId();
+    return id ? (this.store.tasks().find((task) => task.id === id) ?? null) : null;
+  });
+
+  // Only needed for deep links, when the list isn't loaded yet or doesn't contain the task.
+  readonly taskResource = this.api.getTask(() => (this.cachedTask() ? null : this.taskId()));
+
+  readonly task = computed(
+    () => this.cachedTask() ?? (this.taskResource.hasValue() ? this.taskResource.value() : null),
+  );
+  readonly isEditMode = computed(() => !!this.taskId());
+  // Editing can't start until the task is known, otherwise a blank form would be saved over it.
+  readonly isTaskPending = computed(() => this.isEditMode() && !this.task());
 
   readonly isBusy = signal(false);
 
-  readonly taskModel = signal<TaskForm>({
-    title: '',
-    description: '',
-    status: 'pending',
+  // Re-seeded only when a different task arrives, so a list refresh never wipes in-progress edits.
+  readonly taskModel = linkedSignal<Task | null, TaskForm>({
+    source: this.task,
+    computation: (task, previous) =>
+      previous && previous.source?.id === task?.id ? previous.value : toFormModel(task),
   });
 
   readonly taskForm = form(this.taskModel, (p) => {
     required(p.title, { message: 'Title is required' });
   });
 
-  readonly isEditMode = computed(() => !!this.taskId());
-
   readonly isFormValid = computed(() => this.taskForm().valid());
-
-  constructor() {
-    effect(() => {
-      const task = this.task();
-      this.taskModel.set({
-        title: task?.title ?? '',
-        description: task?.description ?? '',
-        status: task?.status ?? 'pending',
-      });
-    });
-  }
 
   onSubmit(event: Event): void {
     event.preventDefault();
+    if (this.isTaskPending()) {
+      return;
+    }
+
     submit(this.taskForm, async () => {
+      const { title, description, status } = this.taskModel();
       const formValue: TaskFormValue = {
-        title: this.taskModel().title.trim(),
-        description: this.taskModel().description.trim(),
-        status: this.taskModel().status,
+        title: title.trim(),
+        description: description.trim(),
+        status,
       };
+
+      const taskId = this.taskId();
+      if (taskId) {
+        // Optimistic: the list already shows the change while it syncs in the background.
+        this.store.queueTaskUpdate(taskId, formValue);
+        this.notifications.success('Task updated successfully.');
+        this.router.navigate(['/tasks']);
+        return;
+      }
 
       this.isBusy.set(true);
       try {
-        if (!this.task()) {
-          this.store.createTask(formValue).subscribe({
-            next: () => {
-              this.notifications.success('Task created successfully.');
-              this.isBusy.set(false);
-              this.router.navigate(['/tasks']);
-            },
-            error: (error: HttpErrorResponse) => {
-              this.notifications.error(error.error?.message ?? 'Unable to create task right now.');
-              this.isBusy.set(false);
-            },
-          });
-        } else {
-          this.store.queueTaskUpdate(this.taskId(), formValue);
-          this.notifications.success('Task updated successfully.');
-          this.isBusy.set(false);
-          this.router.navigate(['/tasks']);
-        }
-      } catch (error) {
-        this.notifications.error(
-          (error as HttpErrorResponse).error?.message ?? 'Unable to save task right now.',
-        );
+        await firstValueFrom(this.store.createTask(formValue));
+        this.notifications.success('Task created successfully.');
+        this.router.navigate(['/tasks']);
+      } catch {
+        // httpErrorInterceptor already shows the server's error message.
+      } finally {
         this.isBusy.set(false);
       }
     });
